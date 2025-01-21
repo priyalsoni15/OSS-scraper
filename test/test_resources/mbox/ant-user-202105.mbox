@@ -1,0 +1,298 @@
+From user-return-73729-archive-asf-public=cust-asf.ponee.io@ant.apache.org  Wed May 12 14:42:11 2021
+Return-Path: <user-return-73729-archive-asf-public=cust-asf.ponee.io@ant.apache.org>
+X-Original-To: archive-asf-public@cust-asf.ponee.io
+Delivered-To: archive-asf-public@cust-asf.ponee.io
+Received: from mxout1-he-de.apache.org (mxout1-he-de.apache.org [95.216.194.37])
+	by mx-eu-01.ponee.io (Postfix) with ESMTPS id 0C5A018066D
+	for <archive-asf-public@cust-asf.ponee.io>; Wed, 12 May 2021 16:42:11 +0200 (CEST)
+Received: from mail.apache.org (mailroute1-lw-us.apache.org [207.244.88.153])
+	by mxout1-he-de.apache.org (ASF Mail Server at mxout1-he-de.apache.org) with SMTP id A34FE61079
+	for <archive-asf-public@cust-asf.ponee.io>; Wed, 12 May 2021 14:42:09 +0000 (UTC)
+Received: (qmail 33154 invoked by uid 500); 12 May 2021 14:42:07 -0000
+Mailing-List: contact user-help@ant.apache.org; run by ezmlm
+Precedence: bulk
+List-Unsubscribe: <mailto:user-unsubscribe@ant.apache.org>
+List-Help: <mailto:user-help@ant.apache.org>
+List-Post: <mailto:user@ant.apache.org>
+List-Id: "Ant Users List" <user.ant.apache.org>
+Reply-To: "Ant Users List" <user@ant.apache.org>
+Delivered-To: mailing list user@ant.apache.org
+Received: (qmail 33071 invoked by uid 99); 12 May 2021 14:42:06 -0000
+Received: from spamproc1-he-de.apache.org (HELO spamproc1-he-de.apache.org) (116.203.196.100)
+    by apache.org (qpsmtpd/0.29) with ESMTP; Wed, 12 May 2021 14:42:06 +0000
+Received: from localhost (localhost [127.0.0.1])
+	by spamproc1-he-de.apache.org (ASF Mail Server at spamproc1-he-de.apache.org) with ESMTP id 0E96B1FF3A1;
+	Wed, 12 May 2021 14:42:06 +0000 (UTC)
+X-Virus-Scanned: Debian amavisd-new at spamproc1-he-de.apache.org
+X-Spam-Flag: NO
+X-Spam-Score: 0.009
+X-Spam-Level:
+X-Spam-Status: No, score=0.009 tagged_above=-999 required=6.31
+	tests=[DKIM_SIGNED=0.1, DKIM_VALID=-0.1, DKIM_VALID_AU=-0.1,
+	DKIM_VALID_EF=-0.1, HTML_MESSAGE=0.2, SPF_PASS=-0.001,
+	T_KAM_HTML_FONT_INVALID=0.01] autolearn=disabled
+Authentication-Results: spamproc1-he-de.apache.org (amavisd-new);
+	dkim=pass (2048-bit key) header.d=gmail.com
+Received: from mx1-he-de.apache.org ([116.203.227.195])
+	by localhost (spamproc1-he-de.apache.org [116.203.196.100]) (amavisd-new, port 10024)
+	with ESMTP id O7ERT-KvE4wR; Wed, 12 May 2021 14:42:05 +0000 (UTC)
+Received-SPF: Pass (mailfrom) identity=mailfrom; client-ip=2a00:1450:4864:20::22a; helo=mail-lj1-x22a.google.com; envelope-from=gstein@gmail.com; receiver=<UNKNOWN> 
+Received: from mail-lj1-x22a.google.com (mail-lj1-x22a.google.com [IPv6:2a00:1450:4864:20::22a])
+	by mx1-he-de.apache.org (ASF Mail Server at mx1-he-de.apache.org) with ESMTPS id 658FB7FE49;
+	Wed, 12 May 2021 14:42:05 +0000 (UTC)
+Received: by mail-lj1-x22a.google.com with SMTP id s25so5233028ljo.11;
+        Wed, 12 May 2021 07:42:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=CHkzSQxP9MA31ZbBYbopSw5qvA3QGaMj8SE63eIDK9c=;
+        b=Dzhb3XWhjLpZHj3XL4ZOJYYw5OygFLi0S1ZwSJyZVyxpGAGW+HKMKyxQ3ATx27+GsS
+         vNWsrYNejPjKSybR2zAjNeNrUbq/1VpUiO7M/QE4uoOQL05TkB2MuV8YaaBdrAvvvDvI
+         PxGAH7H/o3J27fAZFhTiIyAJZS95zLViG97jXyAiILDE96IvzAU1AZEy/DVuyD/DCVSS
+         lKpzBGL7OK+UW/vb1kdi5TH6BgwE3ifVQ4n15Rp8SFu4HTAHkAB0KmmvDM8J3xs+K9No
+         YODKSzwpHzC5nOnE+wms7bqrr/ULbFSBLqL8i4tR04hKiXvmJfRbesoRcFQP2Qz8MuYH
+         mycw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=CHkzSQxP9MA31ZbBYbopSw5qvA3QGaMj8SE63eIDK9c=;
+        b=XnTgi3KPXeyhohY7JJ6CrWd0PKCU+SFTnB53QknhTJlJ0+R/KbaPF5lf8n5Ld5ZrFS
+         jNx1YS8WFp5afNmInOFsKWTYjXgIqm9NwDnQlSOnhpnaUqlMTJ/nE2Z30lhCe15JhcmH
+         PjYzf+39JBwyoMGCbMiYSF6aNMLiAlRNgauIJ2QM4SqXQYEFzhVDPWDEabroI/8SqS7T
+         uMtmyA/rRnprEc34jut1A0MBez1q4rhSgW+0MzcLsZsDQPJD24ftLlPF+azc0/ZSHyBr
+         mIgAjeTE+xXxKVOhQLDKB7DeljIZ3cu3jF4/8B8gOto3lt8s+c6+QHmZ1bZ39gO3iZiw
+         wOTQ==
+X-Gm-Message-State: AOAM5311WOsBd2YnUZsLv9UF2I2WTs2PwgisuViN9FZNl9HkJsTqS2cj
+	QEvp3CjaFxA5UqxPID4KJu5ubpTNc/KbeeKdl9w=
+X-Google-Smtp-Source: ABdhPJzVZjcTDrFkZifFINAVKluF/A7rxK0vFiQ33zi3FbUrAAun6O4Q7LFfwdBicTX5twMM91YRsBS49yTKygrUurs=
+X-Received: by 2002:a2e:a482:: with SMTP id h2mr25696413lji.246.1620830524649;
+ Wed, 12 May 2021 07:42:04 -0700 (PDT)
+MIME-Version: 1.0
+References: <BY5PR02MB63371BE2458667C300CCE660885A9@BY5PR02MB6337.namprd02.prod.outlook.com>
+ <BY5PR02MB6337C7396D9EF92E7E87681288589@BY5PR02MB6337.namprd02.prod.outlook.com>
+ <BY5PR02MB633701D09A2792D00744100D88559@BY5PR02MB6337.namprd02.prod.outlook.com>
+ <BY5PR02MB63373B48F49B90D2328C1FCE88529@BY5PR02MB6337.namprd02.prod.outlook.com>
+In-Reply-To: <BY5PR02MB63373B48F49B90D2328C1FCE88529@BY5PR02MB6337.namprd02.prod.outlook.com>
+From: Greg Stein <gstein@gmail.com>
+Date: Wed, 12 May 2021 09:41:52 -0500
+Message-ID: <CABD8fLWvwnhvnPsOb41u7bARLg9M6nj-rJOnuiYvDtFMMKYPdQ@mail.gmail.com>
+Subject: Re: Issue accessing apache.org
+To: "Shete, Laxmikant" <Laxmikant_Shete@bmc.com>
+Cc: "webmaster@apache.org" <webmaster@apache.org>, "dev@kafka.apache.org" <dev@kafka.apache.org>, 
+	"users@kafka.apache.org" <users@kafka.apache.org>, "user@ant.apache.org" <user@ant.apache.org>, 
+	"dev@ant.apache.org" <dev@ant.apache.org>, "issues@maven.apache.org" <issues@maven.apache.org>
+Content-Type: multipart/alternative; boundary="000000000000a9b48205c2230381"
+
+--000000000000a9b48205c2230381
+Content-Type: text/plain; charset="UTF-8"
+
+Laxmikant Shete,
+
+You have already been told to stop spamming multiple lists across the
+Apache Software Foundation. I am cc'ing them to let them know: any
+further progress on this issue will be handled directly with the
+Infrastructure team, which you can reference via users@infra.apache.org. If
+you continue to spam our mailing lists, you will continue to be blocked.
+The original problem began with abuse of repository.apache.org. Go look at
+the email thread, if you want to solve this problem.
+
+You should absolutely STOP mailing any of those other lists. They cannot
+help you, and you are only annoying those lists.
+
+On May 9, Daniel Gruno informed you of the problem. Respond there.
+
+Regards,
+Greg Stein
+Infrastructure Administrator, ASF
+
+
+On Wed, May 12, 2021 at 12:21 AM Shete, Laxmikant <Laxmikant_Shete@bmc.com>
+wrote:
+
+> Hi All,
+>
+>
+>
+> Please let me know if anyone is working on this.
+>
+>
+>
+> If you are not the correct contact, please help with right contact.
+>
+>
+>
+>
+>
+> Thanks & Regards,
+>
+>
+>
+> *Laxmikant Shete*
+>
+> Sr. Network Systems Engineer
+>
+> *Direct *+ 91-20-40175476
+>
+>
+>
+>
+>
+> *From:* Shete, Laxmikant
+> *Sent:* Sunday, May 9, 2021 5:05 PM
+> *To:* webmaster@apache.org; dev@kafka.apache.org; users@kafka.apache.org;
+> user@ant.apache.org; dev@ant.apache.org; issues@maven.apache.org
+> *Cc:* 'Jazbutis, Mirga' <Mirga_Jazbutis@bmc.com>
+> *Subject:* RE: Issue accessing apache.org
+>
+>
+>
+> Hi All,
+>
+>
+>
+> We are facing issue accessing below apache.org pages from our BMC Austin
+> office. Austin office uses BMC Egress IP "*198.147.191.15*". These pages
+> are accessible from other BMC offices.
+>
+>
+>
+> So we would like your network/ security team to check if BMC Egress IP "
+> *198.147.191.15*" is not block at apache.org.
+>
+>
+>
+> http://kafka.apache.org/
+>
+> http://hc.apache.org/
+>
+> http://maven.apache.org/
+>
+> http://ant.apache.org/
+>
+>
+>
+>
+>
+> If you are not the correct contact, please help with right contact.
+>
+>
+>
+>
+>
+>
+>
+> Thanks & Regards,
+>
+>
+>
+> *Laxmikant Shete*
+>
+> Sr. Network Systems Engineer
+>
+> *Direct *+ 91-20-40175476
+>
+>
+>
+>
+>
+> *From:* Shete, Laxmikant
+> *Sent:* Thursday, May 6, 2021 10:50 AM
+> *To:* 'webmaster@apache.org' <webmaster@apache.org>
+> *Cc:* Jazbutis, Mirga <Mirga_Jazbutis@bmc.com>
+> *Subject:* RE: Issue accessing apache.org
+>
+>
+>
+> Hi Team,
+>
+>
+>
+> Please let us know if this is been take care. If you are not the right
+> contact please suggest the correct.
+>
+>
+>
+>
+>
+> Thanks & Regards,
+>
+>
+>
+> *Laxmikant Shete*
+>
+> Sr. Network Systems Engineer
+>
+> *Direct *+ 91-20-40175476
+>
+>
+>
+>
+>
+> *From:* Shete, Laxmikant
+> *Sent:* Tuesday, May 4, 2021 5:57 PM
+> *To:* webmaster@apache.org
+> *Cc:* Jazbutis, Mirga <Mirga_Jazbutis@bmc.com>
+> *Subject:* Issue accessing apache.org
+>
+>
+>
+> Hi Team,
+>
+>
+>
+> Myself Laxmikant Shete from BMC Software. I am part of Network team.
+>
+>
+>
+> We have been reported issue accessing below apache.org pages from our BMC
+> Austin office. Austin office uses BMC Egress IP "*198.147.191.15*".
+>
+>
+>
+> We have checked from other locations in BMC and the pages are accessible
+> with no issues.
+>
+>
+>
+> So we would like your network/ security team to check if BMC Egress IP "
+> *198.147.191.15*" is not block at apache.org.
+>
+>
+>
+> http://kafka.apache.org/
+>
+> http://hc.apache.org/
+>
+> http://maven.apache.org/
+>
+> http://ant.apache.org/
+>
+>
+>
+>
+>
+> If you are not the correct contact, please help with right contect.
+>
+>
+>
+>
+>
+> Thanks & Regards,
+>
+>
+>
+> *Laxmikant Shete*
+>
+> Sr. Network Systems Engineer
+>
+> *Direct *+ 91-20-40175476
+>
+>
+>
+>
+>
+
+--000000000000a9b48205c2230381--
+

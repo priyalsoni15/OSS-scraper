@@ -1,0 +1,80 @@
+From user-return-73722-archive-asf-public=cust-asf.ponee.io@ant.apache.org  Mon Mar  8 21:10:44 2021
+Return-Path: <user-return-73722-archive-asf-public=cust-asf.ponee.io@ant.apache.org>
+X-Original-To: archive-asf-public@cust-asf.ponee.io
+Delivered-To: archive-asf-public@cust-asf.ponee.io
+Received: from mxout1-he-de.apache.org (mxout1-he-de.apache.org [95.216.194.37])
+	by mx-eu-01.ponee.io (Postfix) with ESMTPS id C34FE180661
+	for <archive-asf-public@cust-asf.ponee.io>; Mon,  8 Mar 2021 22:10:44 +0100 (CET)
+Received: from mail.apache.org (mailroute1-lw-us.apache.org [207.244.88.153])
+	by mxout1-he-de.apache.org (ASF Mail Server at mxout1-he-de.apache.org) with SMTP id A5FA666644
+	for <archive-asf-public@cust-asf.ponee.io>; Mon,  8 Mar 2021 21:06:05 +0000 (UTC)
+Received: (qmail 37954 invoked by uid 500); 8 Mar 2021 21:01:37 -0000
+Mailing-List: contact user-help@ant.apache.org; run by ezmlm
+Precedence: bulk
+List-Unsubscribe: <mailto:user-unsubscribe@ant.apache.org>
+List-Help: <mailto:user-help@ant.apache.org>
+List-Post: <mailto:user@ant.apache.org>
+List-Id: "Ant Users List" <user.ant.apache.org>
+Reply-To: "Ant Users List" <user@ant.apache.org>
+Delivered-To: mailing list user@ant.apache.org
+Received: (qmail 36757 invoked by uid 500); 8 Mar 2021 21:01:35 -0000
+Received: (qmail 36747 invoked by uid 99); 8 Mar 2021 21:01:35 -0000
+Received: from ec2-52-204-25-47.compute-1.amazonaws.com (HELO mailrelay1-ec2-va.apache.org) (52.204.25.47)
+    by apache.org (qpsmtpd/0.29) with ESMTP; Mon, 08 Mar 2021 21:01:35 +0000
+Received: from localhost.localdomain (1504943-static.lxtnkya3.metronetinc.net [199.204.85.187])
+	by mailrelay1-ec2-va.apache.org (ASF Mail Server at mailrelay1-ec2-va.apache.org) with ESMTPSA id EF2593EACA;
+	Mon,  8 Mar 2021 21:01:34 +0000 (UTC)
+To: "planners@apachecon.com" <planners@apachecon.com>
+Reply-To: "planners@apachecon.com" <planners@apachecon.com>
+From: Rich Bowen <rbowen@apache.org>
+Subject: Call for Presentations for ApacheCon 2021 now open
+Organization: The Apache Software Foundation
+Message-ID: <f6ca6176-5d30-9f8a-00ce-109b5eb1c839@apache.org>
+Date: Mon, 8 Mar 2021 16:01:34 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.8.0
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+
+[Note: You are receiving this because you are subscribed to a users@ 
+list on one or more Apache Software Foundation projects.]
+
+The ApacheCon Planners and the Apache Software Foundation are pleased to 
+announce that ApacheCon@Home will be held online, September 21-23, 2021. 
+Once again, we’ll be featuring content from dozens of our projects, as 
+well as content about our community, how Apache works, business models 
+around Apache software, the legal aspects of open source, and many other 
+topics.
+
+Last year’s virtual ApacheCon@Home event was a big success, with 5,745 
+registrants from more than 150 countries, spanning every time zone, with 
+the virtual format delivering content to attendees who would never have 
+attended an in-person ApacheCon (83% of post-event poll responders in 
+2020 indicated this was their first ApacheCon ever)!
+
+Given the great participation and excitement for last year’s event, we 
+are announcing the Call for Presentations is now open to presenters from 
+around the world until May 1st. Talks can be focused on the topics 
+above, as well as any of our amazing projects. Submit your talks today!
+
+https://www.apachecon.com/acah2021/cfp.html
+
+We look forward to reviewing your contribution to one of the most 
+popular open source software events in the world!
+
+
+Rich, for the ApacheCon Planners
+
+-- 
+Rich Bowen, VP Conferences
+The Apache Software Foundation
+https://apachecon.com/
+@apachecon
+
+---------------------------------------------------------------------
+To unsubscribe, e-mail: user-unsubscribe@ant.apache.org
+For additional commands, e-mail: user-help@ant.apache.org
+
+

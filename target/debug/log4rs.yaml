@@ -1,0 +1,26 @@
+appenders:
+  # stdout:
+  #   kind: console
+  #   encoder:
+  #     pattern: "{d(%Y-%m-%d %H:%M:%S %Z)(utc)} [{l}] {m}\n"
+  console:
+    kind: console
+    encoder:
+      pattern: "{d(%Y-%m-%d %H:%M:%S %Z)(utc)} [{l}] {m}\n"
+
+  miner:
+    kind: file
+    path: "miner.log"
+    append: false
+    encoder:
+      pattern: "{d(%Y-%m-%d %H:%M:%S %Z)(utc)} [{l}] {m}\n"
+
+root:
+  level: off
+  appenders: [console]
+
+loggers:
+  miner:
+    level: info
+    appenders:
+      - miner

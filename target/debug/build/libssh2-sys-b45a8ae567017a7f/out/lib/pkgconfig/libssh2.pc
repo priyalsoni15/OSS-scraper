@@ -1,0 +1,17 @@
+###########################################################################
+# libssh2 installation details
+###########################################################################
+
+prefix=/mnt/data1/asf-code-quality/volunteer-energy/rust-code/target/debug/build/libssh2-sys-b45a8ae567017a7f/out
+exec_prefix=
+libdir=/mnt/data1/asf-code-quality/volunteer-energy/rust-code/target/debug/build/libssh2-sys-b45a8ae567017a7f/out/lib
+includedir=/mnt/data1/asf-code-quality/volunteer-energy/rust-code/target/debug/build/libssh2-sys-b45a8ae567017a7f/out/include
+
+Name: libssh2
+URL: https://www.libssh2.org/
+Description: Library for SSH-based communication
+Version: 1.9.0_DEV
+Requires.private: 
+Libs: -L${libdir} -lssh2 
+Libs.private: 
+Cflags: -I${includedir}

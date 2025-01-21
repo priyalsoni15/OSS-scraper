@@ -1,0 +1,12 @@
+/mnt/data1/asf-code-quality/volunteer-energy/rust-code/target/debug/deps/libquick_xml-e2595618a63a57aa.rmeta: /root/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quick-xml-0.19.0/src/lib.rs /root/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quick-xml-0.19.0/src/errors.rs /root/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quick-xml-0.19.0/src/escapei.rs /root/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quick-xml-0.19.0/src/events/mod.rs /root/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quick-xml-0.19.0/src/events/attributes.rs /root/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quick-xml-0.19.0/src/reader.rs /root/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quick-xml-0.19.0/src/utils.rs /root/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quick-xml-0.19.0/src/writer.rs
+
+/mnt/data1/asf-code-quality/volunteer-energy/rust-code/target/debug/deps/quick_xml-e2595618a63a57aa.d: /root/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quick-xml-0.19.0/src/lib.rs /root/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quick-xml-0.19.0/src/errors.rs /root/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quick-xml-0.19.0/src/escapei.rs /root/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quick-xml-0.19.0/src/events/mod.rs /root/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quick-xml-0.19.0/src/events/attributes.rs /root/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quick-xml-0.19.0/src/reader.rs /root/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quick-xml-0.19.0/src/utils.rs /root/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quick-xml-0.19.0/src/writer.rs
+
+/root/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quick-xml-0.19.0/src/lib.rs:
+/root/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quick-xml-0.19.0/src/errors.rs:
+/root/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quick-xml-0.19.0/src/escapei.rs:
+/root/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quick-xml-0.19.0/src/events/mod.rs:
+/root/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quick-xml-0.19.0/src/events/attributes.rs:
+/root/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quick-xml-0.19.0/src/reader.rs:
+/root/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quick-xml-0.19.0/src/utils.rs:
+/root/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quick-xml-0.19.0/src/writer.rs:

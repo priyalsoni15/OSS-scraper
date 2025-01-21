@@ -1,0 +1,5 @@
+0000000000000000000000000000000000000000 741b10770ce87175c8153bcd2d13940e7096ecbe Test <test@test.com> 1648676871 -0700	commit (initial): First commit
+741b10770ce87175c8153bcd2d13940e7096ecbe 2d2d28f3e14bf82343192da8f27ddb3633b275dc Test <test@test.com> 1648677006 -0700	commit: Script
+2d2d28f3e14bf82343192da8f27ddb3633b275dc 69752178411e721e97f492693a691cd7fd6d8efa Test <test@test.com> 1648677032 -0700	commit: Empty commit
+69752178411e721e97f492693a691cd7fd6d8efa 276d78cd96ed1501335d2d5e3538f7f7cd73aa19 Test <test@test.com> 1648677060 -0700	commit: Both files, should count
+276d78cd96ed1501335d2d5e3538f7f7cd73aa19 08b65c07ad900bfc7022249e79dffd95dac3d14a Stefan Stanciulescu <contact@stefanstanciulescu.com> 1657308240 -0700	commit: A commit later in time

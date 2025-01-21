@@ -1,0 +1,2 @@
+[languages]
+types = ["C", "Cpp", "CHeader", "CppHeader", "CSharp", "Go", "Groovy", "Java", "JavaScript", "TypeScript", "Kotlin", "Php", "Python", "Rust", "Scala", "Swift"]

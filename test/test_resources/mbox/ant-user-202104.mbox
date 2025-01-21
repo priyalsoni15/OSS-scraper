@@ -1,0 +1,641 @@
+From user-return-73723-archive-asf-public=cust-asf.ponee.io@ant.apache.org  Mon Apr 12 04:31:33 2021
+Return-Path: <user-return-73723-archive-asf-public=cust-asf.ponee.io@ant.apache.org>
+X-Original-To: archive-asf-public@cust-asf.ponee.io
+Delivered-To: archive-asf-public@cust-asf.ponee.io
+Received: from mxout1-he-de.apache.org (mxout1-he-de.apache.org [95.216.194.37])
+	by mx-eu-01.ponee.io (Postfix) with ESMTPS id 4DCD618063B
+	for <archive-asf-public@cust-asf.ponee.io>; Mon, 12 Apr 2021 06:31:33 +0200 (CEST)
+Received: from mail.apache.org (mailroute1-lw-us.apache.org [207.244.88.153])
+	by mxout1-he-de.apache.org (ASF Mail Server at mxout1-he-de.apache.org) with SMTP id 024C660125
+	for <archive-asf-public@cust-asf.ponee.io>; Mon, 12 Apr 2021 04:31:29 +0000 (UTC)
+Received: (qmail 91955 invoked by uid 500); 12 Apr 2021 04:31:27 -0000
+Mailing-List: contact user-help@ant.apache.org; run by ezmlm
+Precedence: bulk
+List-Unsubscribe: <mailto:user-unsubscribe@ant.apache.org>
+List-Help: <mailto:user-help@ant.apache.org>
+List-Post: <mailto:user@ant.apache.org>
+List-Id: "Ant Users List" <user.ant.apache.org>
+Reply-To: "Ant Users List" <user@ant.apache.org>
+Delivered-To: mailing list user@ant.apache.org
+Received: (qmail 91932 invoked by uid 99); 12 Apr 2021 04:31:27 -0000
+Received: from mailrelay1-he-de.apache.org (HELO mailrelay1-he-de.apache.org) (116.203.21.61)
+    by apache.org (qpsmtpd/0.29) with ESMTP; Mon, 12 Apr 2021 04:31:27 +0000
+Received: from whiteoffice.local (unknown [223.186.121.156])
+	by mailrelay1-he-de.apache.org (ASF Mail Server at mailrelay1-he-de.apache.org) with ESMTPSA id 0AD083E8B1;
+	Mon, 12 Apr 2021 04:31:25 +0000 (UTC)
+To: Ant Developers List <dev@ant.apache.org>
+Cc: Ant Users List <user@ant.apache.org>
+From: Jaikiran Pai <jaikiran@apache.org>
+Subject: [VOTE] Release Apache Ant 1.10.10 based on RC1
+Message-ID: <8ccde46f-92f7-81e0-1840-aede99b59553@apache.org>
+Date: Mon, 12 Apr 2021 10:01:16 +0530
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
+ Gecko/20100101 Thunderbird/78.9.1
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
+
+I've created a release candidate for 1.10.10:
+
+git tag: ANT_1.10.10_RC1
+          on commit: eccd0a2ceb4fa854ee9f2a95cfea10d55a485dda
+tarballs: https://dist.apache.org/repos/dist/dev/ant/
+           revision: 46988
+Maven artifacts:
+https://repository.apache.org/content/repositories/orgapacheant-1047/org/apache/ant/
+Snapcraft Build
+           Revision 18 in latest/candidate
+
+This vote will be open at least for 72 hours and close no earlier than 
+15th April 2021 04:30 AM UTC.
+
+
+-Jaikiran
+
+
+---------------------------------------------------------------------
+To unsubscribe, e-mail: user-unsubscribe@ant.apache.org
+For additional commands, e-mail: user-help@ant.apache.org
+
+
+From user-return-73724-archive-asf-public=cust-asf.ponee.io@ant.apache.org  Mon Apr 12 11:02:33 2021
+Return-Path: <user-return-73724-archive-asf-public=cust-asf.ponee.io@ant.apache.org>
+X-Original-To: archive-asf-public@cust-asf.ponee.io
+Delivered-To: archive-asf-public@cust-asf.ponee.io
+Received: from mxout1-ec2-va.apache.org (mxout1-ec2-va.apache.org [3.227.148.255])
+	by mx-eu-01.ponee.io (Postfix) with ESMTPS id 5537418065E
+	for <archive-asf-public@cust-asf.ponee.io>; Mon, 12 Apr 2021 13:02:33 +0200 (CEST)
+Received: from mail.apache.org (mailroute1-lw-us.apache.org [207.244.88.153])
+	by mxout1-ec2-va.apache.org (ASF Mail Server at mxout1-ec2-va.apache.org) with SMTP id 909CB3F31C
+	for <archive-asf-public@cust-asf.ponee.io>; Mon, 12 Apr 2021 11:02:32 +0000 (UTC)
+Received: (qmail 40971 invoked by uid 500); 12 Apr 2021 11:02:31 -0000
+Mailing-List: contact user-help@ant.apache.org; run by ezmlm
+Precedence: bulk
+List-Unsubscribe: <mailto:user-unsubscribe@ant.apache.org>
+List-Help: <mailto:user-help@ant.apache.org>
+List-Post: <mailto:user@ant.apache.org>
+List-Id: "Ant Users List" <user.ant.apache.org>
+Reply-To: "Ant Users List" <user@ant.apache.org>
+Delivered-To: mailing list user@ant.apache.org
+Received: (qmail 40944 invoked by uid 99); 12 Apr 2021 11:02:31 -0000
+Received: from mailrelay1-he-de.apache.org (HELO mailrelay1-he-de.apache.org) (116.203.21.61)
+    by apache.org (qpsmtpd/0.29) with ESMTP; Mon, 12 Apr 2021 11:02:31 +0000
+Received: from whiteoffice.local (unknown [223.186.121.156])
+	by mailrelay1-he-de.apache.org (ASF Mail Server at mailrelay1-he-de.apache.org) with ESMTPSA id 3ED013E8AA;
+	Mon, 12 Apr 2021 11:02:30 +0000 (UTC)
+Subject: Re: [VOTE] Release Apache Ant 1.10.10 based on RC1
+From: Jaikiran Pai <jaikiran@apache.org>
+To: Ant Developers List <dev@ant.apache.org>
+Cc: Ant Users List <user@ant.apache.org>
+References: <8ccde46f-92f7-81e0-1840-aede99b59553@apache.org>
+Message-ID: <f514b2bd-2570-6b6d-8fc7-173492a446f0@apache.org>
+Date: Mon, 12 Apr 2021 16:32:27 +0530
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
+ Gecko/20100101 Thunderbird/78.9.1
+MIME-Version: 1.0
+In-Reply-To: <8ccde46f-92f7-81e0-1840-aede99b59553@apache.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
+
+Changes that will be part of this release are noted here 
+https://dist.apache.org/repos/dist/dev/ant/RELEASE-NOTES-1.10.10.html
+
+-Jaikiran
+
+On 12/04/21 10:01 am, Jaikiran Pai wrote:
+> I've created a release candidate for 1.10.10:
+>
+> git tag: ANT_1.10.10_RC1
+>          on commit: eccd0a2ceb4fa854ee9f2a95cfea10d55a485dda
+> tarballs: https://dist.apache.org/repos/dist/dev/ant/
+>           revision: 46988
+> Maven artifacts:
+> https://repository.apache.org/content/repositories/orgapacheant-1047/org/apache/ant/ 
+>
+> Snapcraft Build
+>           Revision 18 in latest/candidate
+>
+> This vote will be open at least for 72 hours and close no earlier than 
+> 15th April 2021 04:30 AM UTC.
+>
+>
+> -Jaikiran
+>
+
+---------------------------------------------------------------------
+To unsubscribe, e-mail: user-unsubscribe@ant.apache.org
+For additional commands, e-mail: user-help@ant.apache.org
+
+
+From user-return-73725-archive-asf-public=cust-asf.ponee.io@ant.apache.org  Wed Apr 14 19:03:45 2021
+Return-Path: <user-return-73725-archive-asf-public=cust-asf.ponee.io@ant.apache.org>
+X-Original-To: archive-asf-public@cust-asf.ponee.io
+Delivered-To: archive-asf-public@cust-asf.ponee.io
+Received: from mxout1-he-de.apache.org (mxout1-he-de.apache.org [95.216.194.37])
+	by mx-eu-01.ponee.io (Postfix) with ESMTPS id A86781804BB
+	for <archive-asf-public@cust-asf.ponee.io>; Wed, 14 Apr 2021 21:03:45 +0200 (CEST)
+Received: from mail.apache.org (mailroute1-lw-us.apache.org [207.244.88.153])
+	by mxout1-he-de.apache.org (ASF Mail Server at mxout1-he-de.apache.org) with SMTP id 65E4F61C5A
+	for <archive-asf-public@cust-asf.ponee.io>; Wed, 14 Apr 2021 19:03:44 +0000 (UTC)
+Received: (qmail 1867 invoked by uid 500); 14 Apr 2021 19:03:42 -0000
+Mailing-List: contact user-help@ant.apache.org; run by ezmlm
+Precedence: bulk
+List-Unsubscribe: <mailto:user-unsubscribe@ant.apache.org>
+List-Help: <mailto:user-help@ant.apache.org>
+List-Post: <mailto:user@ant.apache.org>
+List-Id: "Ant Users List" <user.ant.apache.org>
+Reply-To: "Ant Users List" <user@ant.apache.org>
+Delivered-To: mailing list user@ant.apache.org
+Received: (qmail 1855 invoked by uid 99); 14 Apr 2021 19:03:42 -0000
+Received: from spamproc1-he-fi.apache.org (HELO spamproc1-he-fi.apache.org) (95.217.134.168)
+    by apache.org (qpsmtpd/0.29) with ESMTP; Wed, 14 Apr 2021 19:03:42 +0000
+Received: from localhost (localhost [127.0.0.1])
+	by spamproc1-he-fi.apache.org (ASF Mail Server at spamproc1-he-fi.apache.org) with ESMTP id BE718C0439
+	for <user@ant.apache.org>; Wed, 14 Apr 2021 19:03:41 +0000 (UTC)
+X-Virus-Scanned: Debian amavisd-new at spamproc1-he-fi.apache.org
+X-Spam-Flag: NO
+X-Spam-Score: -0.201
+X-Spam-Level:
+X-Spam-Status: No, score=-0.201 tagged_above=-999 required=6.31
+	tests=[DKIM_SIGNED=0.1, DKIM_VALID=-0.1, DKIM_VALID_AU=-0.1,
+	DKIM_VALID_EF=-0.1, SPF_PASS=-0.001] autolearn=disabled
+Authentication-Results: spamproc1-he-fi.apache.org (amavisd-new);
+	dkim=pass (2048-bit key) header.d=gmail.com
+Received: from mx1-he-de.apache.org ([116.203.227.195])
+	by localhost (spamproc1-he-fi.apache.org [95.217.134.168]) (amavisd-new, port 10024)
+	with ESMTP id yOKIRIBcg8g9 for <user@ant.apache.org>;
+	Wed, 14 Apr 2021 19:03:41 +0000 (UTC)
+Received-SPF: Pass (mailfrom) identity=mailfrom; client-ip=2a00:1450:4864:20::12c; helo=mail-lf1-x12c.google.com; envelope-from=basinilya@gmail.com; receiver=<UNKNOWN> 
+Received: from mail-lf1-x12c.google.com (mail-lf1-x12c.google.com [IPv6:2a00:1450:4864:20::12c])
+	by mx1-he-de.apache.org (ASF Mail Server at mx1-he-de.apache.org) with ESMTPS id 29A407FDC0
+	for <user@ant.apache.org>; Wed, 14 Apr 2021 19:03:41 +0000 (UTC)
+Received: by mail-lf1-x12c.google.com with SMTP id n8so35060218lfh.1
+        for <user@ant.apache.org>; Wed, 14 Apr 2021 12:03:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=to:from:subject:message-id:date:user-agent:mime-version
+         :content-language:content-transfer-encoding;
+        bh=5NpTvL9GqXZUiuDCL8lTM6v0mbEwUaUSszxDtP3PkzY=;
+        b=vRAO1Y7UHhLAF4MBNAGTQUgqaPwdqOoioQNf2Mbe8/rPNw0XSjWkJp+HYirXGOkiGZ
+         4aZG17co0KnhTyoEnIifcvCAYkYsk8mHs6z/Bhwimce/oc6PWQQlT+cONRpDU/RyfH7S
+         2GuNgC4v9lGBYtRKRDMOo2l2vVEfHhqygz6ije6xv7Y8Hj4au590CLQp5l99YbXn7BM1
+         oeRyUrXQoHSAWlmxJJC2e4ZBEri2ABuj6h4fb2GwjKrOgoBzgCFsnE5e5PApG61674jB
+         c3VpBFdc0WIgyrInvJmxtuCjuqL2WNe+/Vcx2Zluwd93kHnlgbsgiXFUA3s3yS5WY7Kq
+         aA3w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:to:from:subject:message-id:date:user-agent
+         :mime-version:content-language:content-transfer-encoding;
+        bh=5NpTvL9GqXZUiuDCL8lTM6v0mbEwUaUSszxDtP3PkzY=;
+        b=ZDx3PENQiJqbX5MKPOA7QOM9k3VP2SrXCet0it8GElP1WwMCTJpjQcANScIFbA5euE
+         kjW/tqNP5km3poHxF/MYMLDG4fS7tqgWXDwq+shu20U677up39c4vJDwbSU7CE1oybbG
+         7mvyMyqHJHcidnjpnPOcltF9FDZm9U3G/tKrNdWH2LTAu2vE/fge2n+k14dcGGXD7ZpL
+         lipL4RyO/VXzc/DyLEKzrZ/C5CDDpwNEmAGBAOJAapPSe/3dVqJiOx7xs1QVzofZAQXi
+         q7RxNi0SRIu0XuJKP8bkCmtboq4NWg8iSzmHfbTUReeBbO7ZXdmDMs/L08JAUEml/2VV
+         kmRQ==
+X-Gm-Message-State: AOAM5304MI38+aaoRdV9oPJ5J1k+DbZEYt91WtsY9GL/3jviGxCefUmi
+	ERW4/JdBGvR/kynuYyRH5jxZ1PMiMEtdgQ==
+X-Google-Smtp-Source: ABdhPJzCLibLwpwL7RrE7bX7nmkRUwsyCL8KiywCNjyJY6Kfew5V05T38b48pA3EQBHo59EqQVHX/w==
+X-Received: by 2002:a05:6512:118d:: with SMTP id g13mr27069114lfr.36.1618427020231;
+        Wed, 14 Apr 2021 12:03:40 -0700 (PDT)
+Received: from [192.168.2.225] ([94.229.108.206])
+        by smtp.googlemail.com with ESMTPSA id k25sm69364ljc.81.2021.04.14.12.03.39
+        for <user@ant.apache.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 14 Apr 2021 12:03:39 -0700 (PDT)
+To: user@ant.apache.org
+From: basinilya@gmail.com
+Subject: default value for configurable bootclasspath in javac
+Message-ID: <23eb24bf-c317-1bbb-4992-24c200d8f9a3@gmail.com>
+Date: Wed, 14 Apr 2021 22:03:38 +0300
+User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.9.0
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+
+Hi. I've got the following in my build xml:
+
+	<property name="javac.bootclasspath" value="" />
+
+	<presetdef name="myjavac">
+		<javac source="1.7" target="1.7" includeantruntime="no" bootclasspath="${javac.bootclasspath}" >
+		</javac>
+	</presetdef>
+
+The idea is to not alter bootclasspath when the caller did not provide an explicit -Djavac.bootclasspath=...
+An empty string as the default value works fine with Sun Javac, but it fails with: <javac compiler="org.eclipse.jdt.core.JDTCompilerAdapter">
+
+     [myjavac] The type java.lang.Double cannot be resolved. It is indirectly referenced from required .class files
+     [myjavac] ----------
+     [myjavac] 1 problem (1 error)
+
+Since the presetdef task does not support conditional attributes I'm asking for an advice on how to make it work.
+
+This is Ant 1.10.8 bundled with Eclipse.
+
+---------------------------------------------------------------------
+To unsubscribe, e-mail: user-unsubscribe@ant.apache.org
+For additional commands, e-mail: user-help@ant.apache.org
+
+
+From user-return-73726-archive-asf-public=cust-asf.ponee.io@ant.apache.org  Fri Apr 16 02:14:37 2021
+Return-Path: <user-return-73726-archive-asf-public=cust-asf.ponee.io@ant.apache.org>
+X-Original-To: archive-asf-public@cust-asf.ponee.io
+Delivered-To: archive-asf-public@cust-asf.ponee.io
+Received: from mxout1-ec2-va.apache.org (mxout1-ec2-va.apache.org [3.227.148.255])
+	by mx-eu-01.ponee.io (Postfix) with ESMTPS id 720EE18063F
+	for <archive-asf-public@cust-asf.ponee.io>; Fri, 16 Apr 2021 04:14:37 +0200 (CEST)
+Received: from mail.apache.org (mailroute1-lw-us.apache.org [207.244.88.153])
+	by mxout1-ec2-va.apache.org (ASF Mail Server at mxout1-ec2-va.apache.org) with SMTP id 9D6C847A49
+	for <archive-asf-public@cust-asf.ponee.io>; Fri, 16 Apr 2021 02:14:10 +0000 (UTC)
+Received: (qmail 7620 invoked by uid 500); 16 Apr 2021 02:07:29 -0000
+Mailing-List: contact user-help@ant.apache.org; run by ezmlm
+Precedence: bulk
+List-Unsubscribe: <mailto:user-unsubscribe@ant.apache.org>
+List-Help: <mailto:user-help@ant.apache.org>
+List-Post: <mailto:user@ant.apache.org>
+List-Id: "Ant Users List" <user.ant.apache.org>
+Reply-To: "Ant Users List" <user@ant.apache.org>
+Delivered-To: mailing list user@ant.apache.org
+Received: (qmail 7589 invoked by uid 99); 16 Apr 2021 02:07:29 -0000
+Received: from ec2-52-204-25-47.compute-1.amazonaws.com (HELO mailrelay1-ec2-va.apache.org) (52.204.25.47)
+    by apache.org (qpsmtpd/0.29) with ESMTP; Fri, 16 Apr 2021 02:07:29 +0000
+Received: from whiteoffice.local (unknown [223.186.251.95])
+	by mailrelay1-ec2-va.apache.org (ASF Mail Server at mailrelay1-ec2-va.apache.org) with ESMTPSA id 30E9F3EAF0;
+	Fri, 16 Apr 2021 02:07:27 +0000 (UTC)
+Subject: Re: [VOTE] Release Apache Ant 1.10.10 based on RC1
+From: Jaikiran Pai <jaikiran@apache.org>
+To: Ant Developers List <dev@ant.apache.org>
+Cc: Ant Users List <user@ant.apache.org>
+References: <8ccde46f-92f7-81e0-1840-aede99b59553@apache.org>
+Message-ID: <7a59eb6c-e635-1757-4f8a-a89a2cca63f4@apache.org>
+Date: Fri, 16 Apr 2021 07:37:14 +0530
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
+ Gecko/20100101 Thunderbird/78.9.1
+MIME-Version: 1.0
+In-Reply-To: <8ccde46f-92f7-81e0-1840-aede99b59553@apache.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
+
+With +1s from Stefan, Maarten, me and Paul (non-binding), this vote has 
+passed.
+
+I'll start the rest of the release activities shortly.
+
+Thank you everyone.
+
+-Jaikiran
+
+On 12/04/21 10:01 am, Jaikiran Pai wrote:
+> I've created a release candidate for 1.10.10:
+>
+> git tag: ANT_1.10.10_RC1
+>          on commit: eccd0a2ceb4fa854ee9f2a95cfea10d55a485dda
+> tarballs: https://dist.apache.org/repos/dist/dev/ant/
+>           revision: 46988
+> Maven artifacts:
+> https://repository.apache.org/content/repositories/orgapacheant-1047/org/apache/ant/ 
+>
+> Snapcraft Build
+>           Revision 18 in latest/candidate
+>
+> This vote will be open at least for 72 hours and close no earlier than 
+> 15th April 2021 04:30 AM UTC.
+>
+>
+> -Jaikiran
+>
+
+---------------------------------------------------------------------
+To unsubscribe, e-mail: user-unsubscribe@ant.apache.org
+For additional commands, e-mail: user-help@ant.apache.org
+
+
+From user-return-73727-archive-asf-public=cust-asf.ponee.io@ant.apache.org  Mon Apr 19 07:25:19 2021
+Return-Path: <user-return-73727-archive-asf-public=cust-asf.ponee.io@ant.apache.org>
+X-Original-To: archive-asf-public@cust-asf.ponee.io
+Delivered-To: archive-asf-public@cust-asf.ponee.io
+Received: from mxout1-he-de.apache.org (mxout1-he-de.apache.org [95.216.194.37])
+	by mx-eu-01.ponee.io (Postfix) with ESMTPS id 0C4DD180654
+	for <archive-asf-public@cust-asf.ponee.io>; Mon, 19 Apr 2021 09:25:19 +0200 (CEST)
+Received: from mail.apache.org (mailroute1-lw-us.apache.org [207.244.88.153])
+	by mxout1-he-de.apache.org (ASF Mail Server at mxout1-he-de.apache.org) with SMTP id 4DFFC60428
+	for <archive-asf-public@cust-asf.ponee.io>; Mon, 19 Apr 2021 07:25:17 +0000 (UTC)
+Received: (qmail 73598 invoked by uid 500); 19 Apr 2021 07:25:15 -0000
+Mailing-List: contact user-help@ant.apache.org; run by ezmlm
+Precedence: bulk
+List-Unsubscribe: <mailto:user-unsubscribe@ant.apache.org>
+List-Help: <mailto:user-help@ant.apache.org>
+List-Post: <mailto:user@ant.apache.org>
+List-Id: "Ant Users List" <user.ant.apache.org>
+Reply-To: "Ant Users List" <user@ant.apache.org>
+Delivered-To: mailing list user@ant.apache.org
+Received: (qmail 73564 invoked by uid 99); 19 Apr 2021 07:25:14 -0000
+Received: from mailrelay1-he-de.apache.org (HELO mailrelay1-he-de.apache.org) (116.203.21.61)
+    by apache.org (qpsmtpd/0.29) with ESMTP; Mon, 19 Apr 2021 07:25:14 +0000
+Received: from whiteoffice.local (unknown [223.189.99.60])
+	by mailrelay1-he-de.apache.org (ASF Mail Server at mailrelay1-he-de.apache.org) with ESMTPSA id C160D3E8B1;
+	Mon, 19 Apr 2021 07:25:12 +0000 (UTC)
+To: announce@apache.org, Ant Developers List <dev@ant.apache.org>,
+ Ant Users List <user@ant.apache.org>
+From: Jaikiran Pai <jaikiran@apache.org>
+Subject: [ANNOUNCE] Apache Ant 1.10.10 released
+Message-ID: <9f001cf4-f562-2164-5662-a8ec9ca8ee4f@apache.org>
+Date: Mon, 19 Apr 2021 12:55:02 +0530
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
+ Gecko/20100101 Thunderbird/78.9.1
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
+Content-Language: en-US
+
+The Apache Ant Team is pleased to announce the release of Apache Ant=20
+1.10.10.
+
+Apache Ant is a Java library and command-line tool that helps building=20
+software.
+
+The Apache Ant team currently maintains two lines of development. The=20
+1.9.x releases require Java 5 at runtime and 1.10.x requires Java 8 at=20
+runtime. Both lines are based off of Ant 1.9.7 and the 1.9.x releases=20
+are mostly bug fix releases while additional new features are developed=20
+for 1.10.x. We recommend using 1.10.10 unless you are required to use=20
+versions of Java prior to Java 8 during the build process.
+
+Ant 1.10.10 contains various bug fixes as well as some enhancements. The =
+
+complete set of changes is listed at the end of this mail.
+
+Source and binary distributions are available for download from the=20
+Apache Ant download site:
+
+https://ant.apache.org/bindownload.cgi
+https://ant.apache.org/srcdownload.cgi
+
+When downloading, please verify signatures using the KEYS file available =
+
+at the above location when downloading the release.
+
+Changes in 1.10.10 are as follows:
+
+Fixed bugs:
+-----------
+
+ =C2=A0* SCP (with sftp=3Dtrue) task would fail if fetching file located =
+in=20
+root directory
+ =C2=A0=C2=A0 Bugzilla Report 64742
+
+ =C2=A0* javac task would fail if the arguments file it (internally) crea=
+ted=20
+didn't quote
+ =C2=A0=C2=A0 the # character. This has now been fixed.
+ =C2=A0=C2=A0 Bugzilla Reports 64912, 64790
+
+ =C2=A0* made sure LegacyXmlResultFormatter encodes characters illegal in=
+
+ =C2=A0=C2=A0 XML the same way JUnit5's built-in formatter would.
+ =C2=A0=C2=A0 Bugzilla Report 65030
+
+ =C2=A0* LegacyXmlResultFormatter no longer double-encodes <>& in system-=
+err
+ =C2=A0=C2=A0 and system-out
+ =C2=A0=C2=A0 Bugzilla Report 63436
+
+ =C2=A0* Fixes a bug in junitlauncher task's legacy-xml formatter, where =
+the=20
+testcase
+ =C2=A0=C2=A0 representing a @Parameterized JUnit4 test wasn't being repo=
+rted in=20
+the XML.
+ =C2=A0=C2=A0 Bugzilla Report 64952
+
+ =C2=A0* Fixes a bug where the ant-testutil-sources.jar that gets publish=
+ed=20
+to Maven
+ =C2=A0=C2=A0 central repository didn't contain any source files.
+ =C2=A0=C2=A0 Bugzilla Report 65110
+
+ =C2=A0* The <http> condition didn't follow redirects from http to https.=
+
+ =C2=A0=C2=A0 Bugzilla Report 65105
+
+ =C2=A0* ZipOutputStream now overrides write(int) in order to make sure
+ =C2=A0=C2=A0 single byte writes get the same treatment as array writes.
+ =C2=A0=C2=A0 Github Pull Request #145
+
+ =C2=A0* Fixes a potential deadlock in junitlauncher task when using lega=
+cy-xml
+ =C2=A0=C2=A0 reporter.
+ =C2=A0=C2=A0 Bugzilla Report 64733
+
+Other changes:
+--------------
+
+ =C2=A0* javaversion condition now has a new "atmost" attribute. See the =
+
+javaversion
+ =C2=A0=C2=A0 manual for more details
+
+ =C2=A0* The "listener" nested element of the "junitlauncher" task now ha=
+s a new
+ =C2=A0=C2=A0 "useLegacyReportingName" attribute which can be used to con=
+trol the test
+ =C2=A0=C2=A0 identifiers names that get reported by the listener. See th=
+e=20
+junitlauncher
+ =C2=A0=C2=A0 manual for more details.
+ =C2=A0=C2=A0 Note that this change also introduces a new=20
+"setUseLegacyReportingName" method
+ =C2=A0=C2=A0 on the=20
+org.apache.tools.ant.taskdefs.optional.junitlauncher.TestResultFormatter
+ =C2=A0=C2=A0 interface. This will break backward compatibility with any =
+of your=20
+custom
+ =C2=A0=C2=A0 result formatters which implemented this interface and such=20
+
+implementations
+ =C2=A0=C2=A0 are now expected to implement this new method.
+
+ =C2=A0* a new attribute preserveduplicates allows <resourcelist> to retu=
+rn
+ =C2=A0=C2=A0 the same resource multiple times when set to true.
+ =C2=A0=C2=A0 Bugzilla Report 64854
+
+ =C2=A0* a new attribute filterbeforeconcat in <concat> can be used to
+ =C2=A0=C2=A0 decide whether the filterchain should be applied to the
+ =C2=A0=C2=A0 concatenated content (the default) or each nested resource
+ =C2=A0=C2=A0 individually before concatenating them.
+ =C2=A0=C2=A0 Bugzilla Report 64855
+
+ =C2=A0* the ssh tasks now share a new nested element additionalConfig th=
+at
+ =C2=A0=C2=A0 can be used to set config values for the jsch Session used =
+by the
+ =C2=A0=C2=A0 task.
+ =C2=A0=C2=A0 Bugzilla Report 65089
+
+ =C2=A0* added new discardOutput and discardError properties to redirecto=
+r
+ =C2=A0=C2=A0 and the exec, apply and java tasks which can be used to com=
+pletely
+ =C2=A0=C2=A0 discard any (error) output. This is a platform independent
+ =C2=A0=C2=A0 alternative to directiong output to any kind of null device=
+=2E
+
+ =C2=A0* junitlauncher now prints a more useful and instantaneous summary=20
+of
+ =C2=A0=C2=A0 tests being run, closely matching the junit task's summary.=
+
+ =C2=A0=C2=A0 Bugzilla Report 64836
+
+-Jaikiran (on behalf of Apache Ant team)
+
+
+
+---------------------------------------------------------------------
+To unsubscribe, e-mail: user-unsubscribe@ant.apache.org
+For additional commands, e-mail: user-help@ant.apache.org
+
+
+From user-return-73728-archive-asf-public=cust-asf.ponee.io@ant.apache.org  Mon Apr 19 08:24:04 2021
+Return-Path: <user-return-73728-archive-asf-public=cust-asf.ponee.io@ant.apache.org>
+X-Original-To: archive-asf-public@cust-asf.ponee.io
+Delivered-To: archive-asf-public@cust-asf.ponee.io
+Received: from mxout1-he-de.apache.org (mxout1-he-de.apache.org [95.216.194.37])
+	by mx-eu-01.ponee.io (Postfix) with ESMTPS id 61934180654
+	for <archive-asf-public@cust-asf.ponee.io>; Mon, 19 Apr 2021 10:24:04 +0200 (CEST)
+Received: from mail.apache.org (mailroute1-lw-us.apache.org [207.244.88.153])
+	by mxout1-he-de.apache.org (ASF Mail Server at mxout1-he-de.apache.org) with SMTP id 3BB1760454
+	for <archive-asf-public@cust-asf.ponee.io>; Mon, 19 Apr 2021 08:24:01 +0000 (UTC)
+Received: (qmail 24332 invoked by uid 500); 19 Apr 2021 08:23:59 -0000
+Mailing-List: contact user-help@ant.apache.org; run by ezmlm
+Precedence: bulk
+List-Unsubscribe: <mailto:user-unsubscribe@ant.apache.org>
+List-Help: <mailto:user-help@ant.apache.org>
+List-Post: <mailto:user@ant.apache.org>
+List-Id: "Ant Users List" <user.ant.apache.org>
+Reply-To: "Ant Users List" <user@ant.apache.org>
+Delivered-To: mailing list user@ant.apache.org
+Received: (qmail 24320 invoked by uid 99); 19 Apr 2021 08:23:59 -0000
+Received: from spamproc1-he-de.apache.org (HELO spamproc1-he-de.apache.org) (116.203.196.100)
+    by apache.org (qpsmtpd/0.29) with ESMTP; Mon, 19 Apr 2021 08:23:59 +0000
+Received: from localhost (localhost [127.0.0.1])
+	by spamproc1-he-de.apache.org (ASF Mail Server at spamproc1-he-de.apache.org) with ESMTP id CCC971FF469
+	for <user@ant.apache.org>; Mon, 19 Apr 2021 08:23:58 +0000 (UTC)
+X-Virus-Scanned: Debian amavisd-new at spamproc1-he-de.apache.org
+X-Spam-Flag: NO
+X-Spam-Score: -0.202
+X-Spam-Level:
+X-Spam-Status: No, score=-0.202 tagged_above=-999 required=6.31
+	tests=[DKIM_SIGNED=0.1, DKIM_VALID=-0.1, DKIM_VALID_AU=-0.1,
+	DKIM_VALID_EF=-0.1, NICE_REPLY_A=-0.001, SPF_PASS=-0.001]
+	autolearn=disabled
+Authentication-Results: spamproc1-he-de.apache.org (amavisd-new);
+	dkim=pass (2048-bit key) header.d=gmail.com
+Received: from mx1-he-de.apache.org ([116.203.227.195])
+	by localhost (spamproc1-he-de.apache.org [116.203.196.100]) (amavisd-new, port 10024)
+	with ESMTP id aqmmrsGQfEai for <user@ant.apache.org>;
+	Mon, 19 Apr 2021 08:23:56 +0000 (UTC)
+Received-SPF: Pass (mailfrom) identity=mailfrom; client-ip=2a00:1450:4864:20::12b; helo=mail-lf1-x12b.google.com; envelope-from=basinilya@gmail.com; receiver=<UNKNOWN> 
+Received: from mail-lf1-x12b.google.com (mail-lf1-x12b.google.com [IPv6:2a00:1450:4864:20::12b])
+	by mx1-he-de.apache.org (ASF Mail Server at mx1-he-de.apache.org) with ESMTPS id 9025B7FD16
+	for <user@ant.apache.org>; Mon, 19 Apr 2021 08:23:56 +0000 (UTC)
+Received: by mail-lf1-x12b.google.com with SMTP id f41so31227688lfv.8
+        for <user@ant.apache.org>; Mon, 19 Apr 2021 01:23:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:from:to:references:message-id:date:user-agent:mime-version
+         :in-reply-to:content-language:content-transfer-encoding;
+        bh=WJrHqE+/7s6yPb7YkTILiFJQztpCTDXWC1yN63X7dRk=;
+        b=VIS5Eyp5jHiKpebXqSQBZVRQ+F7xdQW7lJZVA/AB063MuowP7R9MzsOKRgtBR7sZuk
+         fLNeU4zRhvQ7uDXArqH0cNwmQJKCBSoc53S9nogaBe9Yl/76cNtFAz9qhUA8bkYbexSt
+         A7cGazgmEMZZR+QrglcEmwqJCwbkPBb+H7Hj66IYVIGvvT5qbRBdAkWAKzkSN0QdkXP9
+         IsVuZhI1zeBqTBa91gjs2z7cepCR8V+uD4yJxsPRhVK/+cRk6sjeUVE4Vb9ZySTGIhDT
+         w+fcL5vdnOqmMeRUcfpuMQeHEMhwkdBgfYDJfi/VDTr5o1FkvCq68QMLp8e4s76eB83c
+         8T/Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:from:to:references:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=WJrHqE+/7s6yPb7YkTILiFJQztpCTDXWC1yN63X7dRk=;
+        b=U+YaBIEvL3TanAYcOmqCdU9/4Sf+teXZwcCWYxJorpdoQimQB2L7XOPU0jJBfjjyma
+         HpLGHQsU2W21BRBDBebEkIQEE79aT/UnSyz4PjrrJ/6x6/SBqfNyAzzbE1DpMpt7jI+X
+         uyeNG+9oFTq5VGBjZzWVJbP539MqDLEAtllafOpaAYOlFmns0427M7eAc8FQ2O7oFDVq
+         LNxWf4Hxu1yKAyg3gRNRf68W2NkjJXkTwjEwcV7G4tKEPkDyWDgw4CHm2wwiqbwsIQeX
+         F3FZZGbwZK+gLgE34L7NJooSJhSC1C2dx7L9Jm2wvRvUe1bk6M7Dguu3ztilu2dTFlfP
+         tUHA==
+X-Gm-Message-State: AOAM530/bmoWntK0qcoGKoLJAr/g0htiqg74hav5LRiSbb0o+J06dCzT
+	YSoVQIyfeS7rk/ve9iroBtTqxdrqry/SyA==
+X-Google-Smtp-Source: ABdhPJxOI41ZwsAltE5GtwjLhZCKLdvMvUglKEBRGdpp37QwKgWeXd/Ts2PYOiD9FiuqTYCXITxbzQ==
+X-Received: by 2002:a19:ed13:: with SMTP id y19mr11863234lfy.338.1618820635529;
+        Mon, 19 Apr 2021 01:23:55 -0700 (PDT)
+Received: from [192.168.2.225] ([94.229.108.206])
+        by smtp.googlemail.com with ESMTPSA id f13sm1781516ljm.25.2021.04.19.01.23.54
+        for <user@ant.apache.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 19 Apr 2021 01:23:54 -0700 (PDT)
+Subject: Re: default value for configurable bootclasspath in javac
+From: basinilya@gmail.com
+To: user@ant.apache.org
+References: <23eb24bf-c317-1bbb-4992-24c200d8f9a3@gmail.com>
+Message-ID: <12d62b31-0b78-140e-5a77-64fc8af5a448@gmail.com>
+Date: Mon, 19 Apr 2021 11:23:53 +0300
+User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.9.0
+MIME-Version: 1.0
+In-Reply-To: <23eb24bf-c317-1bbb-4992-24c200d8f9a3@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+
+I managed to solve the problem with a script:
+
+  	<property name="javac.bootclasspath" value=""/>
+  	<presetdef name="myjavac">
+  		<javac source="1.7" target="1.7" includeantruntime="no">
+  		</javac>
+  	</presetdef>
+  	<script id="myjavac_optional_attrs" language="javascript">
+  		var bootclasspath = project.getProperty("javac.bootclasspath");
+  		/* bootclasspath="" fails with Eclipse Compiler */
+  		if (bootclasspath) {
+  			var myjavacPreSetsWrapper = org.apache.tools.ant.ComponentHelper.getComponentHelper(project).getAntTypeTable().get("myjavac").getPreSets().getWrapper();
+  			myjavacPreSetsWrapper.setAttribute("bootclasspath", bootclasspath);
+  		}
+  	</script>
+
+
+On 14.04.2021 22:03, basinilya@gmail.com wrote:
+> Hi. I've got the following in my build xml:
+> 
+> 	<property name="javac.bootclasspath" value="" />
+> 
+> 	<presetdef name="myjavac">
+> 		<javac source="1.7" target="1.7" includeantruntime="no" bootclasspath="${javac.bootclasspath}" >
+> 		</javac>
+> 	</presetdef>
+> 
+> The idea is to not alter bootclasspath when the caller did not provide an explicit -Djavac.bootclasspath=...
+> An empty string as the default value works fine with Sun Javac, but it fails with: <javac compiler="org.eclipse.jdt.core.JDTCompilerAdapter">
+> 
+>      [myjavac] The type java.lang.Double cannot be resolved. It is indirectly referenced from required .class files
+>      [myjavac] ----------
+>      [myjavac] 1 problem (1 error)
+> 
+> Since the presetdef task does not support conditional attributes I'm asking for an advice on how to make it work.
+> 
+> This is Ant 1.10.8 bundled with Eclipse.
+> 
+
+---------------------------------------------------------------------
+To unsubscribe, e-mail: user-unsubscribe@ant.apache.org
+For additional commands, e-mail: user-help@ant.apache.org
+
+
