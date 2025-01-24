@@ -1,9 +1,0 @@
-/mnt/data1/asf-code-quality/volunteer-energy/rust-code/target/debug/deps/libencoding_index_simpchinese-8766c65e4475fef3.rmeta: /home/swatisin/.cargo/registry/src/index.crates.io-6f17d22bba15001f/encoding-index-simpchinese-1.20141219.5/lib.rs /home/swatisin/.cargo/registry/src/index.crates.io-6f17d22bba15001f/encoding-index-simpchinese-1.20141219.5/gb18030.rs /home/swatisin/.cargo/registry/src/index.crates.io-6f17d22bba15001f/encoding-index-simpchinese-1.20141219.5/gb18030_ranges.rs
-
-/mnt/data1/asf-code-quality/volunteer-energy/rust-code/target/debug/deps/libencoding_index_simpchinese-8766c65e4475fef3.rlib: /home/swatisin/.cargo/registry/src/index.crates.io-6f17d22bba15001f/encoding-index-simpchinese-1.20141219.5/lib.rs /home/swatisin/.cargo/registry/src/index.crates.io-6f17d22bba15001f/encoding-index-simpchinese-1.20141219.5/gb18030.rs /home/swatisin/.cargo/registry/src/index.crates.io-6f17d22bba15001f/encoding-index-simpchinese-1.20141219.5/gb18030_ranges.rs
-
-/mnt/data1/asf-code-quality/volunteer-energy/rust-code/target/debug/deps/encoding_index_simpchinese-8766c65e4475fef3.d: /home/swatisin/.cargo/registry/src/index.crates.io-6f17d22bba15001f/encoding-index-simpchinese-1.20141219.5/lib.rs /home/swatisin/.cargo/registry/src/index.crates.io-6f17d22bba15001f/encoding-index-simpchinese-1.20141219.5/gb18030.rs /home/swatisin/.cargo/registry/src/index.crates.io-6f17d22bba15001f/encoding-index-simpchinese-1.20141219.5/gb18030_ranges.rs
-
-/home/swatisin/.cargo/registry/src/index.crates.io-6f17d22bba15001f/encoding-index-simpchinese-1.20141219.5/lib.rs:
-/home/swatisin/.cargo/registry/src/index.crates.io-6f17d22bba15001f/encoding-index-simpchinese-1.20141219.5/gb18030.rs:
-/home/swatisin/.cargo/registry/src/index.crates.io-6f17d22bba15001f/encoding-index-simpchinese-1.20141219.5/gb18030_ranges.rs:

@@ -1,0 +1,32 @@
+[package]
+name = "miner"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[dependencies]
+git2 = "0.13"
+structopt = { version = "0.3", default-features = false }
+chrono = "0.4.19"
+rayon = "1.6.1"
+calamine = "0.18.0"
+mail-parser = "0.8"
+# mail-parser = { git = "https://github.com/stalwartlabs/mail-parser", rev = "46a8db9" }
+regex = "1"
+nom = "7"
+encoding = "0.2"
+scraper = "0.12.0"
+ureq = "2.4.0"
+indexmap = "1.9.2"
+walkdir = "2"
+tokei = "12.1.2"
+serde_json = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+csv = { git = "https://github.com/gootorov/rust-csv.git", rev = "31d1105f9ee50bf02dff178f20be4a1ec9fdff2d" }
+#csv = "1.1.6"
+#env_logger = "0.9"
+log = "0.4"
+simple_logger = "2.1.0"
+log4rs = "1.0"
+toml = "0.5.8"
+chronoutil = "0.2.3"
