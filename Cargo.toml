@@ -20,8 +20,9 @@ ureq = "2.4.0"
 indexmap = "1.9.2"
 walkdir = "2"
 tokei = "12.1.2"
-serde_json = "1.0"
+reqwest = { version = "0.11", features = ["blocking", "json"] }
 serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
 csv = { git = "https://github.com/gootorov/rust-csv.git", rev = "31d1105f9ee50bf02dff178f20be4a1ec9fdff2d" }
 #csv = "1.1.6"
 #env_logger = "0.9"

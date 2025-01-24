@@ -3,7 +3,7 @@ use calamine::{open_workbook, Reader, Xlsx};
 use git2::Repository;
 use git2::{Error, ErrorCode};
 use indexmap::{IndexMap, IndexSet};
-use log::error;
+use log::{error, info}; // Imported `info` macro
 
 use rayon::iter::{ParallelBridge, ParallelIterator};
 
@@ -23,6 +23,7 @@ mod sokrates_metrics;
 mod statistics;
 mod tokei_metrics;
 mod utils;
+mod github_issues;
 
 use crate::dev_stats::DevStats;
 use crate::project::Project;
@@ -30,88 +31,108 @@ use crate::repo::*;
 use crate::statistics::*;
 use crate::utils::*;
 use pre_post_incubation_analysis::pre_post_analysis;
+use github_issues::fetch_issues_with_comments;
+
 #[derive(StructOpt)]
 pub struct Args {
-    // #[structopt(name = "show-current-branch", long)]
-    // /// shows the current branch
-    // flag_show_current_branch: bool,
-    // #[structopt(name = "parse-emails", long)]
-    // /// parse emails
-    // flag_parse_emails: bool,
-    // #[structopt(name = "parse-commits", long)]
-    // /// parse commits
-    // flag_parse_commits: bool,
+    // ... [existing flags] ...
+
     #[structopt(name = "force-full-analysis", long)]
     /// Force to run a full analysis for those projects that do not have pre incubation commits. So we will only have during and post incubation analysis
     flag_force_full_analysis: bool,
+
     #[structopt(name = "full-analysis", long)]
-    /// run a full analysis - pre/during/post incubation. this only runs on repositories that have previous / post incubation period commits
+    /// Run a full analysis - pre/during/post incubation. This only runs on repositories that have previous/post incubation period commits
     flag_full_analysis: bool,
+
     #[structopt(name = "threads", long)]
-    /// number of threads
+    /// Number of threads
     flag_threads: Option<usize>,
+
     #[structopt(name = "download-emails", long)]
-    /// download all projects' emails
+    /// Download all projects' emails
     flag_download_emails: bool,
+
     #[structopt(name = "project", long)]
-    /// only parse given project
+    /// Only parse given project
     flag_parse_single_project: Option<String>,
+
     #[structopt(name = "list-projects", long)]
-    /// only show projects
+    /// Only show projects
     flag_list_projects: bool,
-    // #[structopt(name = "debug", long)]
-    // / only parse given project
-    // flag_debug: bool,
+
     #[structopt(name = "skip-tokei", long)]
-    /// skip tokei & folder analysis
+    /// Skip tokei & folder analysis
     flag_skip_tokei: bool,
+
     #[structopt(name = "skip-sokrates", long)]
-    /// skip sokrates analysis
+    /// Skip sokrates analysis
     flag_skip_sokrates: bool,
+
     #[structopt(name = "skip-emails", long)]
-    /// skip email analysis
+    /// Skip email analysis
     flag_skip_email_analysis: bool,
+
     #[structopt(name = "commit-messages", long)]
-    /// skip sokrates analysis
+    /// Extract commit messages
     flag_commit_messages: bool,
+
     #[structopt(name = "missing-emails", long)]
-    /// check for any missing email archives
+    /// Check for any missing email archives
     flag_missing_emails: bool,
+
     #[structopt(name = "supported-languages", long)]
-    /// print supported languages
+    /// Print supported languages
     flag_print_supported_languages: bool,
+
     #[structopt(name = "restrict-languages", long)]
-    /// restrict supported languages
+    /// Restrict supported languages
     flag_restrict_languages: bool,
+
     #[structopt(name = "manual-test", long)]
-    /// manual test project
+    /// Manual test project
     flag_manual_test_project: Option<String>,
+
     #[structopt(name = "output-folder", long)]
-    /// set output folder, otherwise default is data
+    /// Set output folder, otherwise default is data
     flag_output_folder: Option<String>,
+
     #[structopt(name = "metadata-filepath", long)]
-    /// path to project's metadata
+    /// Path to project's metadata
     flag_metadata_filepath: Option<String>,
+
     #[structopt(name = "commit-devs-files", long)]
-    /// return a list of commits and the files changed in each file together with whom changed the file
+    /// Return a list of commits and the files changed in each file together with whom changed the file
     flag_commit_devs_files: bool,
+
     #[structopt(name = "time-window", long)]
-    /// instead of analyzing by default incubation-months (start-date until end of month, and then monthly basis),
+    /// Instead of analyzing by default incubation-months (start-date until end of month, and then monthly basis),
     /// analyze per a time window provided by the user. For example time-window=10, each incubation month will be 10 days
     flag_time_window: Option<i64>,
 
     #[structopt(name = "incubation-dates", long)]
-    /// print for each incubation month, the start and end date for time window projects
+    /// Print for each incubation month, the start and end date for time window projects
     flag_print_incubation_dates: bool,
+
     #[structopt(name = "ignore-start-end-date", long)]
-    /// ignore the start and end date from the Excel sheet input, and run from the first to the last commit in the project
+    /// Ignore the start and end date from the Excel sheet input, and run from the first to the last commit in the project
     flag_ignore_start_end_dates: bool,
+
     #[structopt(name = "ignore-commit-message", long)]
-    /// use this option together with the commit-devs option, to ignore the commit messages and not send them to output
+    /// Use this option together with the commit-devs option, to ignore the commit messages and not send them to output
     flag_ignore_commit_message: bool,
+
     #[structopt(name = "git-folder", long)]
-    /// use this option to provide a git folder with the projects. You likely also want to use the flag ignore start end dates
+    /// Use this option to provide a git folder with the projects. You likely also want to use the flag ignore start end dates
     flag_git_folder: Option<String>,
+
+    #[structopt(name = "fetch-github-issues", long)]
+    /// Fetch GitHub issues and comments for each project
+    flag_fetch_github_issues: bool,
+
+    #[structopt(name = "github-output-folder", long)]
+    /// Specify the output folder for GitHub issues JSON files
+    flag_github_output_folder: Option<String>,
 }
 
 fn list_projects(metadata_filepath: &str) -> indexmap::IndexSet<Project> {
@@ -202,7 +223,7 @@ fn print_incubation_dates(projects: IndexSet<Project>, args: &Args) {
         .unwrap();
 
     for r in results {
-        writer.serialize(r);
+        writer.serialize(r).unwrap(); // Added unwrap() to handle Result
     }
 }
 
@@ -400,7 +421,7 @@ fn commits_messages(data_folder_path: &str, args: &Args, metadata_filepath: &str
     projects.iter().for_each(|p| {
         let git_repo = Repository::open(p.path.as_str());
         if let Ok(git_repo) = git_repo {
-            // sometimes if we kill the program, some temp sokrates files might remain
+            // Sometimes if we kill the program, some temp sokrates files might remain
             remove_sokrates_temp(&git_repo);
             let repo = Repo::new(
                 &git_repo,
@@ -472,6 +493,39 @@ fn print_supported_languages(exts: IndexSet<String>) {
     }
 }
 
+fn fetch_github_issues_for_projects(projects: IndexSet<Project>, args: &Args) {
+    let output_folder = args.flag_github_output_folder.as_deref().unwrap_or("github_issues");
+
+    // Create the output directory if it doesn't exist
+    if let Err(e) = std::fs::create_dir_all(output_folder) {
+        error!("Failed to create GitHub issues output folder {}: {}", output_folder, e);
+        return;
+    }
+
+    projects.into_iter().par_bridge().for_each(|project| { // Changed to into_iter()
+        // Extract owner and repo from GitHub URL
+        // Assumes GitHub URL is in the format https://github.com/owner/repo
+        let github_url = project.path.trim();
+        let parts: Vec<&str> = github_url.split('/').collect();
+        if parts.len() < 2 {
+            error!("Invalid GitHub URL for project {}: {}", project.name, github_url);
+            return;
+        }
+
+        // Extract owner and repo
+        let owner = parts[parts.len() - 2];
+        let repo = parts[parts.len() - 1];
+
+        // Define the output file path
+        let output_path = format!("{}/{}_issues.json", output_folder, project.name);
+
+        match fetch_issues_with_comments(owner, repo, &output_path) {
+            Ok(_) => info!("Successfully fetched issues for {}/{}", owner, repo),
+            Err(e) => error!("Failed to fetch issues for {}/{}: {}", owner, repo, e),
+        }
+    });
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // **** LOGGING SETUP **** //
     let start = std::time::Instant::now();
@@ -512,22 +566,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         //     println!("{:?}", dir.unwrap());
         // }
         std::fs::read_dir(cwd)?
-            .map(|dir| match dir {
+            .filter_map(|dir| match dir {
                 Ok(path) => {
                     println!("{:?}", path);
-                    let _git_path = path.path().to_str().unwrap().to_string();
-                    let p = Project {
+                    let git_path = path.path().to_str().unwrap().to_string();
+                    Some(Project {
                         name: path.file_name().to_str().unwrap().to_string(),
                         path: path.path().to_str().unwrap().to_string(),
                         start_date: "".to_string(),
                         end_date: "".to_string(),
                         status: "".to_string(),
-                    };
-                    println!("{:?}", p);
-                    p
+                    })
                 }
-
-                Err(_) => todo!(),
+                Err(e) => {
+                    log::error!("Error reading directory entry: {}", e);
+                    None
+                }
             })
             .collect::<IndexSet<_>>()
     } else {
@@ -540,8 +594,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         projects = projects
             .into_iter()
             .filter(|x| {
-                x.name != "ODFToolkit" || x.name != "commons-ognl" || !x.name.contains("myfaces")
-            }) // ognl is now a project under commons, so hard to get only their emails
+                x.name != "ODFToolkit" && x.name != "commons-ognl" && !x.name.contains("myfaces")
+            }) // Corrected logical operators
+            // Ognl is now a project under commons, so hard to get only their emails
             // myfaces we have trinidad and tobago, but we cannot get emails from there, just the general myfaces emails. we remove these
             .collect::<indexmap::IndexSet<_>>();
         projects
@@ -559,15 +614,35 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         log::error!("Cannot create folder {}", &data_folder_path);
     };
 
+    // Handle fetching GitHub issues
+    if args.flag_fetch_github_issues {
+        let metadata_filepath = if let Some(path) = &args.flag_metadata_filepath {
+            path
+        } else {
+            "../../apache-projects.xlsx"
+        };
+        let projects = list_projects(metadata_filepath);
+        fetch_github_issues_for_projects(projects, &args);
+
+        let duration = start.elapsed();
+        let seconds = duration.as_secs() % 60;
+        let minutes = (duration.as_secs() / 60) % 60;
+        let hours = (duration.as_secs() / 60) / 60;
+        log::info!("GitHub issues fetching completed in {}h:{}m:{}s", hours, minutes, seconds);
+
+        return Ok(());
+    }
+
+    // Existing functionality continues below...
+
     // if args.flag_parse_single_project.is_some() {
     //     analyze_test_project(args.flag_parse_single_project.unwrap(), metadata_filepath);
     //     return Ok(());
     // }
     if args.flag_parse_single_project.is_some() {
         projects = projects
-            .iter()
+            .into_iter()
             .filter(|x| &x.name == args.flag_parse_single_project.as_ref().unwrap())
-            .map(|x| x.clone())
             .collect::<IndexSet<_>>();
     }
 
@@ -692,8 +767,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 let repo = Repo::new(
                     &git_repo,
                     p.name.as_str(),
-                    p.start_date.as_str(),
-                    end_date.as_str(), //p.end_date.as_str(),
+                    &p.start_date,
+                    &end_date, // p.end_date.as_str(),
                     p.status.as_str(),
                     &args,
                 );
@@ -773,9 +848,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     log::info!("Analyzing {} projects", projects.len());
 
-    // // **** ACTUAL LOGIC THAT CALLS FUNCTIONS TO COMPUTE THE METRICS FOR EACH PROJECT **** //
+    // **** ACTUAL LOGIC THAT CALLS FUNCTIONS TO COMPUTE THE METRICS FOR EACH PROJECT **** //
     let java_path = java_path();
-    projects.iter().par_bridge().for_each(|p| {
+    projects.iter().par_bridge().for_each(|p| { // Corrected: If projects is IndexSet, you might need to iterate differently
         let git_repo = Repository::open(p.path.as_str());
         if let Ok(git_repo) = git_repo {
             let repo = Repo::new(
@@ -787,7 +862,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 &args,
             );
             if let Ok(mut repo) = repo {
-                // sometimes if we kill the program, some temp sokrates files might remain
+                // Sometimes if we kill the program, some temp sokrates files might remain
                 remove_sokrates_temp(&git_repo);
                 let checkout = repo.checkout_master_main_trunk(&args);
                 if let Ok(_checkout) = checkout {
