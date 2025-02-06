@@ -1,7 +1,6 @@
 // src/github_issues.rs
 
-use serde::Deserialize;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::env;
 use std::error::Error;
 use std::fs::File;
@@ -22,15 +21,16 @@ pub struct Issue {
     pub created_at: String,
     pub updated_at: String,
     pub closed_at: Option<String>,
-    pub comments: Vec<Comment>,
+    pub author: Option<AuthorNode>,
+    pub comments: CommentConnection,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Comment {
     pub id: String,
-    pub author: Option<Author>,
     pub body: String,
     pub created_at: String,
+    pub author: Option<AuthorNode>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -39,6 +39,7 @@ pub struct Author {
     pub url: String,
 }
 
+// These types are used for the GraphQL query.
 #[derive(Debug, Deserialize)]
 struct GraphQLResponse<T> {
     data: Option<T>,
@@ -48,7 +49,6 @@ struct GraphQLResponse<T> {
 #[derive(Debug, Deserialize)]
 struct GraphQLError {
     message: String,
-    // You can add more fields if needed
 }
 
 #[derive(Debug, Deserialize)]
@@ -58,16 +58,17 @@ struct RepositoryData {
 
 #[derive(Debug, Deserialize)]
 struct Repository {
-    issues: IssueConnection,
+    #[serde(default)]
+    issues: Option<IssueConnection>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 struct IssueConnection {
     pageInfo: PageInfo,
     nodes: Vec<IssueNode>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 struct IssueNode {
     id: String,
     number: u32,
@@ -77,67 +78,88 @@ struct IssueNode {
     createdAt: String,
     updatedAt: String,
     closedAt: Option<String>,
+    author: Option<AuthorNode>,
     comments: CommentConnection,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 struct CommentConnection {
     pageInfo: PageInfo,
     nodes: Vec<CommentNode>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 struct CommentNode {
     id: String,
-    author: Option<AuthorNode>,
     body: String,
     createdAt: String,
+    author: Option<AuthorNode>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 struct AuthorNode {
     login: String,
+    #[serde(default)]
     url: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 struct PageInfo {
     hasNextPage: bool,
     endCursor: Option<String>,
 }
 
-/// Fetches all issues with comments for a given repository.
-///
-/// # Arguments
-///
-/// * `owner` - The owner of the repository.
-/// * `repo` - The repository name.
-/// * `output_path` - The file path to save the fetched issues.
-///
-/// # Errors
-///
-/// Returns an error if the request fails or if the GitHub token is not set.
-pub fn fetch_issues_with_comments(owner: &str, repo: &str, output_path: &str) -> Result<(), Box<dyn Error>> {
-    // Get GitHub token from environment variable
-    let github_token = match env::var("GITHUB_TOKEN") {
-        Ok(token) => token,
-        Err(_) => {
-            error!("GITHUB_TOKEN environment variable is not set.");
-            return Err("GITHUB_TOKEN environment variable is not set.".into());
-        }
-    };
+// For additional comment queries.
+#[derive(Debug, Deserialize)]
+struct IssueData {
+    issue: Option<CommentedIssue>,
+}
 
-    // Initialize HTTP client
+#[derive(Debug, Deserialize)]
+struct CommentedIssue {
+    comments: CommentConnection,
+}
+
+// New CSV row type.
+#[derive(Debug, Serialize)]
+struct CsvRow {
+    r#type: String,
+    issue_url: String,
+    comment_url: String,
+    repo_name: String,
+    id: String,
+    issue_num: u32,
+    title: String,
+    user_login: String,
+    user_id: String,
+    user_name: String,
+    user_email: String,
+    issue_state: String,
+    created_at: String,
+    updated_at: String,
+    body: String,
+    reactions: String,
+}
+
+/// Fetch all issues (with comments) for a given repository via GitHub GraphQL API.
+fn fetch_issues(owner: &str, repo: &str) -> Result<Vec<Issue>, Box<dyn Error>> {
+    // Get the GitHub token from the environment variable.
+    let github_token = env::var("GITHUB_TOKEN")
+        .map_err(|_| "GITHUB_TOKEN environment variable is not set.")?;
+
+    // Build the headers.
     let mut headers = HeaderMap::new();
-    headers.insert(AUTHORIZATION, HeaderValue::from_str(&format!("Bearer {}", github_token))?);
+    headers.insert(
+        AUTHORIZATION,
+        HeaderValue::from_str(&format!("Bearer {}", github_token))?,
+    );
     headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
     headers.insert("User-Agent", HeaderValue::from_static("rust-github-client"));
 
-    let client = Client::builder()
-        .default_headers(headers)
-        .build()?;
+    // Create the HTTP client.
+    let client = Client::builder().default_headers(headers).build()?;
 
-    // GraphQL query to fetch issues with comments
+    // Define the GraphQL query to fetch issues.
     let query = r#"
         query($owner: String!, $name: String!, $cursor: String) {
             repository(owner: $owner, name: $name) {
@@ -155,6 +177,9 @@ pub fn fetch_issues_with_comments(owner: &str, repo: &str, output_path: &str) ->
                         createdAt
                         updatedAt
                         closedAt
+                        author {
+                            login
+                        }
                         comments(first: 100) {
                             pageInfo {
                                 hasNextPage
@@ -162,12 +187,11 @@ pub fn fetch_issues_with_comments(owner: &str, repo: &str, output_path: &str) ->
                             }
                             nodes {
                                 id
-                                author {
-                                    login
-                                    url
-                                }
                                 body
                                 createdAt
+                                author {
+                                    login
+                                }
                             }
                         }
                     }
@@ -205,129 +229,18 @@ pub fn fetch_issues_with_comments(owner: &str, repo: &str, output_path: &str) ->
         let resp_json: GraphQLResponse<RepositoryData> = response.json()?;
 
         if let Some(errors) = resp_json.errors {
-            for error in errors {
-                error!("GraphQL error: {}", error.message);
+            for err in errors {
+                error!("GraphQL error: {}", err.message);
             }
             return Err("GraphQL query failed.".into());
         }
 
-        let data = match resp_json.data {
-            Some(data) => data,
-            None => {
-                error!("No data received from GitHub API.");
-                return Err("No data received from GitHub API.".into());
-            }
-        };
+        let data = resp_json.data.ok_or("No data received from GitHub API.")?;
+        let repository = data.repository.ok_or("Repository not found or access denied.")?;
 
-        let repository = match data.repository {
-            Some(repo) => repo,
-            None => {
-                error!("Repository {} does not exist or access is denied.", repo);
-                return Err(format!("Repository {} does not exist or access is denied.", repo).into());
-            }
-        };
+        let issues_conn = repository.issues.ok_or("Repository issues field is missing.")?;
 
-        for issue_node in repository.issues.nodes {
-            let mut comments = Vec::new();
-            let mut comment_cursor: Option<String> = None;
-
-            loop {
-                let comment_query = r#"
-                    query($owner: String!, $name: String!, $issueNumber: Int!, $cursor: String) {
-                        repository(owner: $owner, name: $name) {
-                            issue(number: $issueNumber) {
-                                comments(first: 100, after: $cursor) {
-                                    pageInfo {
-                                        hasNextPage
-                                        endCursor
-                                    }
-                                    nodes {
-                                        id
-                                        author {
-                                            login
-                                            url
-                                        }
-                                        body
-                                        createdAt
-                                    }
-                                }
-                            }
-                        }
-                    }
-                "#;
-
-                let comment_variables = json!({
-                    "owner": owner,
-                    "name": repo,
-                    "issueNumber": issue_node.number,
-                    "cursor": comment_cursor,
-                });
-
-                let comment_body = json!({
-                    "query": comment_query,
-                    "variables": comment_variables,
-                });
-
-                let comment_response = client.post("https://api.github.com/graphql")
-                    .json(&comment_body)
-                    .send()?;
-
-                if !comment_response.status().is_success() {
-                    let status = comment_response.status();
-                    let text = comment_response.text()?;
-                    error!("GitHub API request for comments failed with status {}: {}", status, text);
-                    return Err(format!("GitHub API request for comments failed with status {}", status).into());
-                }
-
-                let comment_resp_json: GraphQLResponse<RepositoryData> = comment_response.json()?;
-
-                if let Some(errors) = comment_resp_json.errors {
-                    for error in errors {
-                        error!("GraphQL error: {}", error.message);
-                    }
-                    return Err("GraphQL query for comments failed.".into());
-                }
-
-                let comment_data = match comment_resp_json.data {
-                    Some(data) => data,
-                    None => {
-                        error!("No data received from GitHub API for comments.");
-                        return Err("No data received from GitHub API for comments.".into());
-                    }
-                };
-
-                let issue = match comment_data.repository {
-                    Some(repo) => repo.issues.nodes.into_iter().next(),
-                    None => None,
-                };
-
-                let issue = match issue {
-                    Some(issue) => issue,
-                    None => {
-                        error!("Issue not found when fetching comments.");
-                        break;
-                    }
-                };
-
-                for comment_node in issue.comments.nodes {
-                    comments.push(Comment {
-                        id: comment_node.id,
-                        author: comment_node.author.map(|a| Author {
-                            login: a.login,
-                            url: a.url,
-                        }),
-                        body: comment_node.body,
-                        created_at: comment_node.createdAt,
-                    });
-                }
-
-                if issue.comments.pageInfo.hasNextPage {
-                    comment_cursor = issue.comments.pageInfo.endCursor;
-                } else {
-                    break;
-                }
-            }
-
+        for issue_node in issues_conn.nodes {
             let issue = Issue {
                 id: issue_node.id,
                 number: issue_node.number,
@@ -337,25 +250,107 @@ pub fn fetch_issues_with_comments(owner: &str, repo: &str, output_path: &str) ->
                 created_at: issue_node.createdAt,
                 updated_at: issue_node.updatedAt,
                 closed_at: issue_node.closedAt,
-                comments,
+                author: issue_node.author,
+                comments: CommentConnection {
+                    pageInfo: issue_node.comments.pageInfo,
+                    nodes: issue_node.comments.nodes,
+                },
             };
-
             all_issues.push(issue);
         }
 
-        if repository.issues.pageInfo.hasNextPage {
-            cursor = repository.issues.pageInfo.endCursor;
+        if issues_conn.pageInfo.hasNextPage {
+            cursor = issues_conn.pageInfo.endCursor.clone();
         } else {
             break;
         }
     }
 
-    // Serialize all issues to JSON and save to file
-    let path = Path::new(output_path);
+    Ok(all_issues)
+}
+
+/// Fetches issues (with comments) for the given owner/repo and writes them in CSV format.
+pub fn fetch_issues_with_comments_csv(owner: &str, repo: &str, output_csv_path: &str) -> Result<(), Box<dyn Error>> {
+    let issues = fetch_issues(owner, repo)?;
+    let count = issues.len();
+
+    let path = Path::new(output_csv_path);
     let file = File::create(path)?;
-    serde_json::to_writer_pretty(file, &all_issues)?;
+    let mut wtr = csv::Writer::from_writer(file);
 
-    info!("Fetched {} issues from {}/{}", all_issues.len(), owner, repo);
+    // Write CSV header.
+    wtr.write_record(&[
+        "type",
+        "issue_url",
+        "comment_url",
+        "repo_name",
+        "id",
+        "issue_num",
+        "title",
+        "user_login",
+        "user_id",
+        "user_name",
+        "user_email",
+        "issue_state",
+        "created_at",
+        "updated_at",
+        "body",
+        "reactions",
+    ])?;
 
+    // For constructing URLs.
+    let base_issue_url = format!("https://api.github.com/repos/{}/{}/issues", owner, repo);
+    let base_comment_url = format!("https://api.github.com/repos/{}/{}/issues/comments", owner, repo);
+    let repo_name = repo.to_string();
+
+    for issue in issues {
+        // Issue row.
+        let issue_row = CsvRow {
+            r#type: "issue".to_string(),
+            issue_url: format!("{}/{}", base_issue_url, issue.number),
+            comment_url: "".to_string(),
+            repo_name: repo_name.clone(),
+            id: issue.id,
+            issue_num: issue.number,
+            title: issue.title,
+            user_login: issue.author.map(|a| a.login).unwrap_or_default(),
+            user_id: "".to_string(),
+            user_name: "".to_string(),
+            user_email: "".to_string(),
+            issue_state: issue.state,
+            created_at: issue.created_at,
+            updated_at: issue.updated_at,
+            body: issue.body.unwrap_or_default(),
+            reactions: "".to_string(),
+        };
+        wtr.serialize(issue_row)?;
+
+        // Comment rows.
+        for comment_node in issue.comments.nodes {
+            let comment_row = CsvRow {
+                r#type: "comment".to_string(),
+                issue_url: format!("{}/{}", base_issue_url, issue.number),
+                comment_url: format!("{}/{}", base_comment_url, comment_node.id),
+                repo_name: repo_name.clone(),
+                id: comment_node.id,
+                issue_num: issue.number,
+                title: "NA".to_string(),
+                user_login: comment_node.author.map(|a| a.login).unwrap_or_default(),
+                user_id: "".to_string(),
+                user_name: "".to_string(),
+                user_email: "".to_string(),
+                issue_state: "NA".to_string(),
+                // Clone createdAt so it can be used twice.
+                created_at: comment_node.createdAt.clone(),
+                updated_at: comment_node.createdAt, // no separate updated time
+                body: comment_node.body,
+                reactions: "".to_string(),
+            };
+            wtr.serialize(comment_row)?;
+        }
+    }
+
+    wtr.flush()?;
+    info!("Fetched {} issues from {}/{}", count, owner, repo);
     Ok(())
 }

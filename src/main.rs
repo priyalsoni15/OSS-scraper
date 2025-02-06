@@ -3,18 +3,21 @@ use calamine::{open_workbook, Reader, Xlsx};
 use git2::Repository;
 use git2::{Error, ErrorCode};
 use indexmap::{IndexMap, IndexSet};
-use log::{error, info}; // Imported `info` macro
+use log::{error, info};
 
 use rayon::iter::{ParallelBridge, ParallelIterator};
 
 use std::sync::{Arc, RwLock};
-
 use std::time::Duration;
 use structopt::StructOpt;
+
+// Load .env file to bring in environment variables (like GITHUB_TOKEN)
+use dotenv::dotenv;
 
 mod commits_metrics;
 mod dev_stats;
 mod emails;
+mod github_issues;
 mod metrics;
 mod pre_post_incubation_analysis;
 mod project;
@@ -23,7 +26,6 @@ mod sokrates_metrics;
 mod statistics;
 mod tokei_metrics;
 mod utils;
-mod github_issues;
 
 use crate::dev_stats::DevStats;
 use crate::project::Project;
@@ -31,11 +33,11 @@ use crate::repo::*;
 use crate::statistics::*;
 use crate::utils::*;
 use pre_post_incubation_analysis::pre_post_analysis;
-use github_issues::fetch_issues_with_comments;
+use github_issues::{fetch_issues_with_comments_csv};
 
 #[derive(StructOpt)]
 pub struct Args {
-    // ... [existing flags] ...
+    // Existing flags
 
     #[structopt(name = "force-full-analysis", long)]
     /// Force to run a full analysis for those projects that do not have pre incubation commits. So we will only have during and post incubation analysis
@@ -127,12 +129,16 @@ pub struct Args {
     flag_git_folder: Option<String>,
 
     #[structopt(name = "fetch-github-issues", long)]
-    /// Fetch GitHub issues and comments for each project
+    /// Fetch GitHub issues and comments for projects or a single repository
     flag_fetch_github_issues: bool,
 
     #[structopt(name = "github-output-folder", long)]
-    /// Specify the output folder for GitHub issues JSON files
+    /// Specify the output folder for GitHub issues CSV file
     flag_github_output_folder: Option<String>,
+
+    #[structopt(name = "github-url", long)]
+    /// GitHub repository URL to fetch issues from (e.g., https://github.com/apache/hunter.git)
+    flag_github_url: Option<String>,
 }
 
 fn list_projects(metadata_filepath: &str) -> indexmap::IndexSet<Project> {
@@ -223,7 +229,7 @@ fn print_incubation_dates(projects: IndexSet<Project>, args: &Args) {
         .unwrap();
 
     for r in results {
-        writer.serialize(r).unwrap(); // Added unwrap() to handle Result
+        writer.serialize(r).unwrap();
     }
 }
 
@@ -238,7 +244,6 @@ fn _show_branch(repo: &Repository, repo_name: &str) -> Result<(), Error> {
     let head = head.as_ref().and_then(|h| h.shorthand());
 
     println!("{}: {}", repo_name, head.unwrap_or("HEAD (no branch)"));
-
     Ok(())
 }
 
@@ -246,7 +251,7 @@ fn manual_test_project() {
     let writer = Arc::new(RwLock::new(
         csv::WriterBuilder::default()
             .has_headers(true)
-            .from_path(format!("test.csv"))
+            .from_path("test.csv")
             .unwrap(),
     ));
     let args = Args::from_args();
@@ -272,7 +277,6 @@ fn manual_test_project() {
         .unwrap();
 
         repo.checkout_master_main_trunk(&args);
-        // println!("{:?}", repo.commits.len());
         let mut stats = Stats::new(
             p.name.as_str(),
             &p.start_date,
@@ -322,14 +326,11 @@ fn analyze_test_project(project: String, metadata_filepath: &str) {
             )
             .unwrap();
             repo.checkout_master_main_trunk(&args);
-            // println!("{:?}", repo.commits.len());
-
             let mut stats = Stats::new(
                 p.name.as_str(),
                 &p.start_date,
                 &p.end_date,
                 &p.status,
-                // &repo,
                 &java_path,
             );
             let metrics = stats.compute_statistics(&mut repo, &args);
@@ -355,12 +356,14 @@ fn analyze_test_project(project: String, metadata_filepath: &str) {
 fn remove_sokrates_temp(repo: &Repository) {
     std::fs::remove_dir_all(format!(
         "{}/_sokrates",
-        repo.path().parent().unwrap().to_str().unwrap().to_string()
-    ));
+        repo.path().parent().unwrap().to_str().unwrap()
+    ))
+    .ok();
     std::fs::remove_file(format!(
         "{}/git-history.txt",
-        repo.path().parent().unwrap().to_str().unwrap().to_string()
-    ));
+        repo.path().parent().unwrap().to_str().unwrap()
+    ))
+    .ok();
 }
 
 fn check_for_missing_emails(args: &Args, metadata_filepath: &str) {
@@ -387,8 +390,7 @@ fn check_for_missing_emails(args: &Args, metadata_filepath: &str) {
                         repo.project.to_lowercase(),
                         month
                     );
-                    let email_path = std::path::Path::new(path.as_str());
-
+                    let email_path = std::path::Path::new(&path);
                     if email_path.exists() && email_path.metadata().unwrap().len() == 0 {
                         log::error!(
                             "{} - email archive {}-dev-{}.mbox is empty",
@@ -421,7 +423,6 @@ fn commits_messages(data_folder_path: &str, args: &Args, metadata_filepath: &str
     projects.iter().for_each(|p| {
         let git_repo = Repository::open(p.path.as_str());
         if let Ok(git_repo) = git_repo {
-            // Sometimes if we kill the program, some temp sokrates files might remain
             remove_sokrates_temp(&git_repo);
             let repo = Repo::new(
                 &git_repo,
@@ -431,7 +432,6 @@ fn commits_messages(data_folder_path: &str, args: &Args, metadata_filepath: &str
                 p.status.as_str(),
                 &args,
             );
-
             if let Ok(mut repo) = repo {
                 let checkout = repo.checkout_master_main_trunk(&args);
                 if let Ok(_checkout) = checkout {
@@ -451,8 +451,8 @@ fn commits_messages(data_folder_path: &str, args: &Args, metadata_filepath: &str
                                 message: c.message().unwrap_or("").to_string(),
                             }) {
                                 Ok(()) => {}
-                                Err(_e) => {
-                                    error!("cannot serialize commit message");
+                                Err(e) => {
+                                    error!("{} - cannot serialize metric value: {}", p.name.as_str(), e);
                                 }
                             }
                         }
@@ -493,33 +493,24 @@ fn print_supported_languages(exts: IndexSet<String>) {
     }
 }
 
+/// When not using a single GitHub URL, this function iterates over projects parsed from the metadata file.
 fn fetch_github_issues_for_projects(projects: IndexSet<Project>, args: &Args) {
     let output_folder = args.flag_github_output_folder.as_deref().unwrap_or("github_issues");
-
-    // Create the output directory if it doesn't exist
     if let Err(e) = std::fs::create_dir_all(output_folder) {
         error!("Failed to create GitHub issues output folder {}: {}", output_folder, e);
         return;
     }
-
-    projects.into_iter().par_bridge().for_each(|project| { // Changed to into_iter()
-        // Extract owner and repo from GitHub URL
-        // Assumes GitHub URL is in the format https://github.com/owner/repo
+    projects.into_iter().par_bridge().for_each(|project| {
         let github_url = project.path.trim();
         let parts: Vec<&str> = github_url.split('/').collect();
         if parts.len() < 2 {
             error!("Invalid GitHub URL for project {}: {}", project.name, github_url);
             return;
         }
-
-        // Extract owner and repo
         let owner = parts[parts.len() - 2];
         let repo = parts[parts.len() - 1];
-
-        // Define the output file path
-        let output_path = format!("{}/{}_issues.json", output_folder, project.name);
-
-        match fetch_issues_with_comments(owner, repo, &output_path) {
+        let output_path = format!("{}/{}_issues.csv", output_folder, project.name);
+        match fetch_issues_with_comments_csv(owner, repo, &output_path) {
             Ok(_) => info!("Successfully fetched issues for {}/{}", owner, repo),
             Err(e) => error!("Failed to fetch issues for {}/{}: {}", owner, repo, e),
         }
@@ -527,6 +518,9 @@ fn fetch_github_issues_for_projects(projects: IndexSet<Project>, args: &Args) {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Load environment variables from .env file, if it exists.
+    dotenv().ok();
+
     // **** LOGGING SETUP **** //
     let start = std::time::Instant::now();
     log4rs::init_file("log4rs.yaml", Default::default()).unwrap();
@@ -547,24 +541,47 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
+    // --- EARLY EXIT: If fetching GitHub issues, do not load metadata ---
+    if args.flag_fetch_github_issues {
+        if let Some(github_url) = &args.flag_github_url {
+            let trimmed = github_url.trim_end_matches(".git");
+            let parts: Vec<&str> = trimmed.split('/').collect();
+            if parts.len() < 2 {
+                error!("Invalid GitHub URL provided: {}", github_url);
+                return Ok(());
+            }
+            let owner = parts[parts.len() - 2];
+            let repo = parts[parts.len() - 1];
+            let output_folder = args.flag_github_output_folder.as_deref().unwrap_or("github_issues");
+            std::fs::create_dir_all(output_folder)?;
+            let output_csv = format!("{}/{}_issues.csv", output_folder, repo);
+            match fetch_issues_with_comments_csv(owner, repo, &output_csv) {
+                Ok(_) => info!("Successfully fetched issues for {}/{}", owner, repo),
+                Err(e) => error!("Failed to fetch issues for {}/{}: {}", owner, repo, e),
+            }
+        } else {
+            let metadata_filepath = if let Some(path) = &args.flag_metadata_filepath {
+                path
+            } else {
+                "../../apache-projects.xlsx"
+            };
+            let projects = list_projects(metadata_filepath);
+            fetch_github_issues_for_projects(projects, &args);
+        }
+        let duration = start.elapsed();
+        let seconds = duration.as_secs() % 60;
+        let minutes = (duration.as_secs() / 60) % 60;
+        let hours = (duration.as_secs() / 60) / 60;
+        log::info!("GitHub issues fetching completed in {}h:{}m:{}s", hours, minutes, seconds);
+        return Ok(());
+    }
+    // --- End early exit for GitHub issues ---
+
+    // Load projects via git folder or metadata
     let mut projects = if args.flag_git_folder.is_some() {
-        let folder = args.flag_git_folder.clone().unwrap().to_string();
-
+        let folder = args.flag_git_folder.clone().unwrap();
         let mut cwd = std::env::current_dir()?;
-        cwd.push(folder.clone());
-
-        let _projects = IndexSet::<Project>::new();
-
-        // for dir in std::fs::read_dir(cwd.as_path()) {
-        //     // println!("{:?}", dir.into_iter().count());
-        //     for a in dir {
-        //         println!("{:?}", a.unwrap().path())
-        //     }
-        // }
-        // projects
-        // for dir in std::fs::read_dir(cwd)? {
-        //     println!("{:?}", dir.unwrap());
-        // }
+        cwd.push(folder);
         std::fs::read_dir(cwd)?
             .filter_map(|dir| match dir {
                 Ok(path) => {
@@ -572,7 +589,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     let git_path = path.path().to_str().unwrap().to_string();
                     Some(Project {
                         name: path.file_name().to_str().unwrap().to_string(),
-                        path: path.path().to_str().unwrap().to_string(),
+                        path: git_path,
                         start_date: "".to_string(),
                         end_date: "".to_string(),
                         status: "".to_string(),
@@ -595,50 +612,23 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .into_iter()
             .filter(|x| {
                 x.name != "ODFToolkit" && x.name != "commons-ognl" && !x.name.contains("myfaces")
-            }) // Corrected logical operators
-            // Ognl is now a project under commons, so hard to get only their emails
-            // myfaces we have trinidad and tobago, but we cannot get emails from there, just the general myfaces emails. we remove these
+            })
             .collect::<indexmap::IndexSet<_>>();
         projects
     };
 
-    let data_folder_path = if args.flag_output_folder.is_some() {
-        args.flag_output_folder.as_ref().unwrap().as_str()
+    let data_folder_path = if let Some(folder) = &args.flag_output_folder {
+        folder.as_str()
     } else {
         "data"
     };
 
     if let Ok(_res) = std::fs::create_dir_all(data_folder_path) {
-        log::info!("Created output folder: {}", &data_folder_path);
+        log::info!("Created output folder: {}", data_folder_path);
     } else {
-        log::error!("Cannot create folder {}", &data_folder_path);
-    };
-
-    // Handle fetching GitHub issues
-    if args.flag_fetch_github_issues {
-        let metadata_filepath = if let Some(path) = &args.flag_metadata_filepath {
-            path
-        } else {
-            "../../apache-projects.xlsx"
-        };
-        let projects = list_projects(metadata_filepath);
-        fetch_github_issues_for_projects(projects, &args);
-
-        let duration = start.elapsed();
-        let seconds = duration.as_secs() % 60;
-        let minutes = (duration.as_secs() / 60) % 60;
-        let hours = (duration.as_secs() / 60) / 60;
-        log::info!("GitHub issues fetching completed in {}h:{}m:{}s", hours, minutes, seconds);
-
-        return Ok(());
+        log::error!("Cannot create folder {}", data_folder_path);
     }
 
-    // Existing functionality continues below...
-
-    // if args.flag_parse_single_project.is_some() {
-    //     analyze_test_project(args.flag_parse_single_project.unwrap(), metadata_filepath);
-    //     return Ok(());
-    // }
     if args.flag_parse_single_project.is_some() {
         projects = projects
             .into_iter()
@@ -650,7 +640,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         for p in projects {
             println!("{:#?}", p.name.to_lowercase());
         }
-
         return Ok(());
     }
 
@@ -666,7 +655,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let minutes = (duration.as_secs() / 60) % 60;
         let hours = (duration.as_secs() / 60) / 60;
         log::info!("Analysis completed in {}h:{}m:{}s", hours, minutes, seconds);
-
         return Ok(());
     }
 
@@ -692,13 +680,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         } else {
             "../../projects-info-from-podlings-xml-extra-metadata.xlsx"
         };
-        commits_messages(&data_folder_path, &args, metadata_filepath);
+        commits_messages(data_folder_path, &args, metadata_filepath);
         let duration = start.elapsed();
         let seconds = duration.as_secs() % 60;
         let minutes = (duration.as_secs() / 60) % 60;
         let hours = (duration.as_secs() / 60) / 60;
         log::info!("Analysis completed in {}h:{}m:{}s", hours, minutes, seconds);
-
         return Ok(());
     }
 
@@ -716,36 +703,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     if args.flag_download_emails {
         let emails_folder = "../../projects/emails";
-        let make_dir = std::fs::create_dir_all(emails_folder);
-        if let Err(result) = make_dir {
-            log::error!("Sorry, cannot create project/emails directories. Make sure you have writing access?. Original error was {}", result.to_string());
+        if let Err(result) = std::fs::create_dir_all(emails_folder) {
+            log::error!("Cannot create project/emails directories. Make sure you have writing access. Original error: {}", result);
             return Ok(());
         }
-        // project name, and the email name
         let projects_names_fix = IndexMap::from([
             ("apex-core", "apex"),
             ("ant-ivy", "ant"),
             ("derby", "db-derby"),
             ("empire-db", "empire"),
-            // ("ftpserver", "incubator-ftpserver"),
-            // ("hcatalog", "incubator-hcatalog"),
-            // ("ant-ivy", "incubator-ivy"),
-            // ("kalumet", "incubator-kalumet"),
             ("lucene.net", "lucenenet"),
             ("mynewt-core", "mynewt"),
-            // ("npanday", "incubator-npanday"),
-            // ("nuvem", "incubator-nuvem"),
-            // ("odftoolkit", "incubator-odf"),
-            // ("photark", "incubator-photark"),
             ("pluto", "portals-pluto"),
             ("creadur-rat", "creadur"),
-            // ("s4", "incubator-s4"),
-            // ("sanselan", "incubator-sanselan"),
-            // ("servicecomb-java-chassis", "servicecomb"),
-            // ("tashi", "incubator-tashi"),
             ("warble-server", "warble"),
-            // ("wave", "incubator-wave"),
-            // ("zetacomponents", "incubator-zeta"),
         ]);
         let agent = ureq::AgentBuilder::new()
             .timeout_read(Duration::from_secs(15))
@@ -753,14 +724,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .build();
         projects.iter().par_bridge().for_each(|p| {
             let git_repo = Repository::open(p.path.as_str());
-            // let end_date_naive =
-            //     chrono::NaiveDate::parse_from_str(&p.end_date, "%Y-%m-%d").unwrap();
-            // // we download two years worth of emails after graduation
             let end_date = if p.status == "graduated" {
-                let date = chrono::Local::now().format("%Y-%m-%d").to_string();
-                date
+                chrono::Local::now().format("%Y-%m-%d").to_string()
             } else {
-                // if it is retired, we have no emails to download
                 p.end_date.to_string()
             };
             if let Ok(git_repo) = git_repo {
@@ -768,7 +734,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     &git_repo,
                     p.name.as_str(),
                     &p.start_date,
-                    &end_date, // p.end_date.as_str(),
+                    &end_date,
                     p.status.as_str(),
                     &args,
                 );
@@ -780,9 +746,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             repo.project.to_lowercase(),
                             month
                         );
-                        let email_path = std::path::Path::new(path.as_str());
+                        let email_path = std::path::Path::new(&path);
                         if !email_path.exists() {
-                            // let url = format!("https://lists.apache.org/api/mbox.lua?list=dev&domain={}.apache.org&d={}-{}",
                             let url = format!(
                                 "https://mail-archives.apache.org/mod_mbox/{}-dev/{}.mbox",
                                 projects_names_fix
@@ -791,52 +756,32 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                                 month
                             );
                             let res = agent.get(&url).call();
-
                             if let Ok(res) = res {
                                 if res.status() == 200 {
                                     let mut file = std::fs::File::create(&path)
-                                        .expect("Cannot create file {filename}");
+                                        .expect("Cannot create file");
                                     let result = std::io::copy(&mut res.into_reader(), &mut file);
-
                                     if result.is_err() {
-                                        log::error!(
-                                            "{} - cannot download email archive {}",
-                                            repo.project.to_lowercase(),
-                                            &month
-                                        );
+                                        log::error!("{} - cannot download email archive {}", repo.project.to_lowercase(), &month);
                                     } else {
-                                        log::info!(
-                                            "{} - downloaded email archive {} ",
-                                            repo.project.to_lowercase(),
-                                            &month
-                                        );
+                                        log::info!("{} - downloaded email archive {}", repo.project.to_lowercase(), &month);
                                     }
                                 } else {
-                                    log::error!(
-                                        "{} - cannot download email archive {}",
-                                        repo.project.to_lowercase(),
-                                        &month
-                                    );
+                                    log::error!("{} - cannot download email archive {}", repo.project.to_lowercase(), &month);
                                 }
                             } else {
-                                log::error!(
-                                    "{} - cannot download email archive {}",
-                                    repo.project.to_lowercase(),
-                                    &month
-                                );
+                                log::error!("{} - cannot download email archive {}", repo.project.to_lowercase(), &month);
                             }
                         }
                     }
                 }
             }
         });
-
         let duration = start.elapsed();
         let seconds = duration.as_secs() % 60;
         let minutes = (duration.as_secs() / 60) % 60;
         let hours = (duration.as_secs() / 60) / 60;
         log::info!("Analysis completed in {}h:{}m:{}s", hours, minutes, seconds);
-
         return Ok(());
     }
 
@@ -847,10 +792,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     log::info!("Analyzing {} projects", projects.len());
-
-    // **** ACTUAL LOGIC THAT CALLS FUNCTIONS TO COMPUTE THE METRICS FOR EACH PROJECT **** //
     let java_path = java_path();
-    projects.iter().par_bridge().for_each(|p| { // Corrected: If projects is IndexSet, you might need to iterate differently
+    projects.iter().par_bridge().for_each(|p| {
         let git_repo = Repository::open(p.path.as_str());
         if let Ok(git_repo) = git_repo {
             let repo = Repo::new(
@@ -862,35 +805,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 &args,
             );
             if let Ok(mut repo) = repo {
-                // Sometimes if we kill the program, some temp sokrates files might remain
                 remove_sokrates_temp(&git_repo);
                 let checkout = repo.checkout_master_main_trunk(&args);
                 if let Ok(_checkout) = checkout {
                     log::info!("checkout {}", repo.commits.len());
                     if args.flag_commit_devs_files {
                         let dev_stats = DevStats::new(p.name.as_str(), &repo, &java_path);
-
                         let metrics = dev_stats.compute_individual_dev_stats(&args);
                         if let Ok(metrics) = metrics {
                             let mut writer = csv::WriterBuilder::default()
                                 .has_headers(false)
-                                .from_path(format!(
-                                    "{}/{}-commit-file-dev.csv",
-                                    data_folder_path,
-                                    p.name.as_str()
-                                ))
+                                .from_path(format!("{}/{}-commit-file-dev.csv", data_folder_path, p.name.as_str()))
                                 .unwrap();
-
                             for m in metrics {
-                                match writer.serialize(m) {
-                                    Ok(()) => {}
-                                    Err(_e) => {
-                                        error!(
-                                            "{} - cannot serialize metric value {}",
-                                            p.name.as_str(),
-                                            _e
-                                        );
-                                    }
+                                if let Err(e) = writer.serialize(m) {
+                                    error!("{} - cannot serialize metric value: {}", p.name.as_str(), e);
                                 }
                             }
                         } else {
@@ -902,7 +831,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             &repo.start_date,
                             &repo.end_date,
                             &p.status,
-                            // &repo,
                             &java_path,
                         );
                         let metrics = stats.compute_statistics(&mut repo, &args);
@@ -911,16 +839,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                                 .has_headers(true)
                                 .from_path(format!("{}/{}.csv", data_folder_path, p.name.as_str()))
                                 .unwrap();
-
                             for m in metrics {
-                                match writer.serialize(m) {
-                                    Ok(()) => {}
-                                    Err(_e) => {
-                                        error!(
-                                            "{} - cannot serialize metric value",
-                                            p.name.as_str()
-                                        );
-                                    }
+                                if let Err(e) = writer.serialize(m) {
+                                    error!("{} - cannot serialize metric value: {}", p.name.as_str(), e);
                                 }
                             }
                         } else {
@@ -931,26 +852,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     error!("{} - cannot reset to main/master/trunk", p.name.as_str());
                 }
             } else {
-                error!(
-                    "{} - cannot parse the repository and extract commits",
-                    p.name.as_str()
-                );
+                error!("{} - cannot parse the repository and extract commits", p.name.as_str());
             }
         } else {
-            error!(
-                "{} cannot find the git repository at {}",
-                p.name.as_str(),
-                p.path.as_str()
-            );
+            error!("{} cannot find the git repository at {}", p.name.as_str(), p.path.as_str());
         }
     });
-
     let duration = start.elapsed();
     let seconds = duration.as_secs() % 60;
     let minutes = (duration.as_secs() / 60) % 60;
     let hours = (duration.as_secs() / 60) / 60;
     log::info!("Analysis completed in {}h:{}m:{}s", hours, minutes, seconds);
-
     Ok(())
 }
 
@@ -967,7 +879,6 @@ mod test {
                 .unwrap()
                 .to_str()
                 .unwrap()
-                .to_string()
                 .replace("\\", "/")
         );
         if let Ok(r) = repo {

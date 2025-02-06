@@ -1,0 +1,193 @@
+type,issue_url,comment_url,repo_name,id,issue_num,title,user_login,user_id,user_name,user_email,issue_state,created_at,updated_at,body,reactions
+type,issue_url,comment_url,repo_name,id,issue_num,title,user_login,user_id,user_name,user_email,issue_state,created_at,updated_at,body,reactions
+issue,https://api.github.com/repos/apache/hunter/issues/2,,hunter,I_kwDOF9FF7c4_wJ1-,2,Extend --magnitude to support specific metrics,smccarthy788,,,,OPEN,2021-12-02T14:05:07Z,2022-03-25T09:11:12Z,"Users report wanting to filter different metrics at different magnitudes (e.g. p99 vs p50). However, the `--magnitude` argument filters across all metrics.
+
+One option could be to allow setting multiple `metric=min_magnitude` pairs with the `--magnitude` flag, or exclusively a single float. This would be pretty verbose... Ex:
+```bash
+hunter ... --magnitude p50=0.05 --magnitude p99=0.2
+```
+
+Another option would be setting the `min_magnitude` in the config for each test's metric, with support for inheritance so each test doesn't need to define it. This option should also support overriding the config.
+```yaml
+templates:
+  common_metrics:
+    metrics:
+      p50:
+        scale: 1.0e-6
+        direction: -1
+        min_magnitude: 0.05
+      p99:
+        scale: 1.0e-6
+        direction: -1
+        min_magnitude: 0.2
+tests:
+  local2:
+    type: csv
+    file: tests/resources/sample.csv
+    time_column: time
+    metrics:
+      m1:
+        column: metric1
+        direction: 1
+      m2:
+        column: metric2
+        direction: -1
+        min_magnitude: 0.99 # Be able to set min_magnitude for specific tests
+    attributes: [ commit ]
+
+  remote1:
+    inherit: [common_metrics] # min_magnitude set via inheritance
+    prefix: ""performance_regressions.my_product.%{BRANCH}.test1""
+
+```",
+issue,https://api.github.com/repos/apache/hunter/issues/9,,hunter,I_kwDOF9FF7c52QkPW,9,Upgrade numpy version as 1.19.0 is too old,omartoutounji,,,,CLOSED,2023-11-08T17:11:29Z,2023-11-20T16:29:10Z,"On macOS running on Apple Silicon, version 1.19.0 of numpy no longer works as it is too old. More information can be found here on [this issue in the numpy repo](https://github.com/numpy/numpy/issues/22477). I went through this problem and couldn't install hunter due to it so I tried upgrading numpy and things work with tests passing so I propose upgrading numpy to version 1.26.1 and python to "">=3.9,<3.13"" to support the change.",
+comment,https://api.github.com/repos/apache/hunter/issues/9,https://api.github.com/repos/apache/hunter/issues/comments/IC_kwDOF9FF7c5rbT_x,hunter,IC_kwDOF9FF7c5rbT_x,9,NA,omartoutounji,,,,NA,2023-11-08T17:15:09Z,2023-11-08T17:15:09Z,"I have a PR ready, is there any way I can be invited as a collaborator to this repo so I can push it? @guyboltonking @pkolaczk @henrikingo @smccarthy788 ",
+comment,https://api.github.com/repos/apache/hunter/issues/9,https://api.github.com/repos/apache/hunter/issues/comments/IC_kwDOF9FF7c5rb4TV,hunter,IC_kwDOF9FF7c5rb4TV,9,NA,henrikingo,,,,NA,2023-11-08T18:54:49Z,2023-11-08T18:54:49Z,"Hi and that's great to hear!
+
+You don't need to have any special permission to submit a PR. Please use the workflow where you fork your own repo, push your branch there, then create a pr against this repo
+https://gist.github.com/Chaser324/ce0505fbed06b947d962",
+comment,https://api.github.com/repos/apache/hunter/issues/9,https://api.github.com/repos/apache/hunter/issues/comments/IC_kwDOF9FF7c5sceBi,hunter,IC_kwDOF9FF7c5sceBi,9,NA,omartoutounji,,,,NA,2023-11-20T16:29:09Z,2023-11-20T16:29:09Z,Looks like it got updated here https://github.com/datastax-labs/hunter/commit/5a7a361dc9251bfed95ef9537d073cb06b645aaa,
+issue,https://api.github.com/repos/apache/hunter/issues/10,,hunter,I_kwDOF9FF7c52ZOYR,10,Why hasn't there been any updates to this repo in a year+?,omartoutounji,,,,CLOSED,2023-11-09T20:07:15Z,2023-11-20T16:28:35Z,"Hunter has a lot of potential, why has progress halted for so long?",
+comment,https://api.github.com/repos/apache/hunter/issues/10,https://api.github.com/repos/apache/hunter/issues/comments/IC_kwDOF9FF7c5sU5P7,hunter,IC_kwDOF9FF7c5sU5P7,10,NA,henrikingo,,,,NA,2023-11-18T06:54:39Z,2023-11-18T06:54:39Z,"I guess everyone is quite happy with what it already does? We use it every day and it does catch regressions.
+
+What would you want to see that's not there already?",
+comment,https://api.github.com/repos/apache/hunter/issues/10,https://api.github.com/repos/apache/hunter/issues/comments/IC_kwDOF9FF7c5scdka,hunter,IC_kwDOF9FF7c5scdka,10,NA,omartoutounji,,,,NA,2023-11-20T16:28:34Z,2023-11-20T16:28:34Z,"Thank you, makes sense.",
+issue,https://api.github.com/repos/apache/hunter/issues/11,,hunter,I_kwDOF9FF7c57krxX,11,[Bug] Sample data not showing data?,jtaleric,,,,CLOSED,2024-01-09T21:38:35Z,2024-01-19T21:06:50Z,"hunter config
+```
+tests:
+  local1:
+    type: csv
+    file: tests/resources/sample.csv
+    time_column: time
+    metrics: [metric1, metric2]
+    attributes: [commit]
+
+  local2:
+    type: csv
+    file: tests/resources/sample.csv
+    time_column: time
+    metrics:
+      m1:
+        column: metric1
+        direction: 1
+      m2:
+        column: metric2
+        direction: -1
+    attributes: [ commit ]
+
+test_groups:
+  local:
+    - local1
+    - local2
+```
+
+the sample.csv is the same as what is here : https://github.com/datastax-labs/hunter/blob/master/tests/resources/sample.csv 
+
+When I run `hunter validate`
+```
+jtaleric at polaris in ~/code/hunter on master $ hunter validate
+INFO: Checking local1
+WARNING: Test's metric does not have data: local1 metric1
+WARNING: Test's metric does not have data: local1 metric2
+INFO: Checking local2
+WARNING: Test's metric does not have data: local2 m1
+WARNING: Test's metric does not have data: local2 m2
+INFO: Validation finished: VALID
+```
+
+We can see the mention of test metric does not have data... 
+```
+jtaleric at polaris in ~/code/hunter on master $ hunter analyze local1
+INFO: Computing change points for test local1...
+time    commit    metric1    metric2
+------  --------  ---------  ---------
+```
+",
+comment,https://api.github.com/repos/apache/hunter/issues/11,https://api.github.com/repos/apache/hunter/issues/comments/IC_kwDOF9FF7c5wWIeU,hunter,IC_kwDOF9FF7c5wWIeU,11,NA,jtaleric,,,,NA,2024-01-10T13:27:08Z,2024-01-10T13:27:08Z,Debugged the issue... Going to submit a PR to fix.,
+comment,https://api.github.com/repos/apache/hunter/issues/11,https://api.github.com/repos/apache/hunter/issues/comments/IC_kwDOF9FF7c5wWJ3u,hunter,IC_kwDOF9FF7c5wWJ3u,11,NA,jtaleric,,,,NA,2024-01-10T13:30:35Z,2024-01-10T13:30:35Z,"This is due to : https://github.com/datastax-labs/hunter/blob/master/hunter/data_selector.py#L29 
+
+and the sample config using a date > 365 days. ",
+issue,https://api.github.com/repos/apache/hunter/issues/15,,hunter,I_kwDOF9FF7c5-lWxn,15,Releases / Tags?,jtaleric,,,,CLOSED,2024-02-07T19:26:33Z,2024-02-07T22:19:45Z,Any chance we could cut a release for folks to pin to? ,
+comment,https://api.github.com/repos/apache/hunter/issues/15,https://api.github.com/repos/apache/hunter/issues/comments/IC_kwDOF9FF7c5zM-BC,hunter,IC_kwDOF9FF7c5zM-BC,15,NA,jtaleric,,,,NA,2024-02-07T20:05:05Z,2024-02-07T20:05:05Z,"/assign @smccarthy788  
+
+(not sure this will work)",
+comment,https://api.github.com/repos/apache/hunter/issues/15,https://api.github.com/repos/apache/hunter/issues/comments/IC_kwDOF9FF7c5zNq11,hunter,IC_kwDOF9FF7c5zNq11,15,NA,smccarthy788,,,,NA,2024-02-07T21:26:09Z,2024-02-07T21:26:09Z,"> (not sure this will work)
+
+I got an email, maybe that counts 🤷
+
+I see the Orion thread about not wanting to pin to a sha. Reasonable, but please keep in mind all work on this repo is ad-hoc & voluntary. I've cut a `v0.5.0` tag, but make no promises about future tags or releases.",
+comment,https://api.github.com/repos/apache/hunter/issues/15,https://api.github.com/repos/apache/hunter/issues/comments/IC_kwDOF9FF7c5zN7pV,hunter,IC_kwDOF9FF7c5zN7pV,15,NA,jtaleric,,,,NA,2024-02-07T22:19:43Z,2024-02-07T22:19:43Z,@smccarthy788 totally understand! Let me know if you need more volunteers to help things along! Thanks!! ,
+issue,https://api.github.com/repos/apache/hunter/issues/24,,hunter,I_kwDOF9FF7c6YxPN6,24,graphite events do not work as documented.,Gerrrr,,,,OPEN,2024-10-03T03:33:57Z,2024-10-03T03:33:57Z,"Documented, expected behavior:
+
+Post for each metric
+```
+$ curl -X POST ""http://graphite_address/events/"" \
+    -d '{ 
+      ""what"": ""Performance Test"", 
+      ""tags"": [""perf-test"", ""daily"", ""my-product""],   
+      ""when"": 1537884100,
+      ""data"": {""commit"": ""fe6583ab"", ""branch"": ""new-feature"", ""version"": ""0.0.1""}
+    }'
+```
+
+and get values from `data` in hunter output.
+
+
+Actual behavior:
+
+```
+$ hunter analyze my-product.test --since=-10m
+Fetching data from Graphite...
+Traceback (most recent call last):
+  File ""/srv/hunter/bin/hunter"", line 6, in <module>
+    sys.exit(main())
+  File ""/srv/hunter/hunter/main.py"", line 501, in main
+    script_main(conf)
+  File ""/srv/hunter/hunter/main.py"", line 602, in script_main
+    analyzed_series = hunter.analyze(
+  File ""/srv/hunter/hunter/main.py"", line 102, in analyze
+    series = importer.fetch_data(test, selector)
+  File ""/srv/hunter/hunter/importer.py"", line 135, in fetch_data
+    events = self.graphite.fetch_events(
+  File ""/srv/hunter/hunter/graphite.py"", line 163, in fetch_events
+    return [
+  File ""/srv/hunter/hunter/graphite.py"", line 164, in <listcomp>
+    GraphiteEvent(event.get(""when""), **ast.literal_eval(event.get(""data"")))
+TypeError: __init__() missing 6 required positional arguments: 'test_owner', 'test_name', 'run_id', 'status', 'start_time', and 'end_time'
+```
+
+This happens because `GraphiteEvent` these keys - 'test_owner', 'test_name', 'run_id', 'status', 'start_time', and 'end_time' - are mandatory. 
+
+We should adjust README and, in addition, make these fields optional.",
+issue,https://api.github.com/repos/apache/hunter/issues/30,,hunter,I_kwDOF9FF7c6ou_XQ,30,Update Readme to clarify support status?,brucearctor,,,,OPEN,2025-02-04T17:37:11Z,2025-02-04T22:13:03Z,"the ReadME has ""This is an unsupported open source project created by DataStax employees."" has that at the top.
+
+Is that accurate?
+
+Perhaps this was created by DataStax employees is correct.  BUT, as an 'active' Apache [ incubating ] project, is this really not supported?  Highlighting an open source project is not supported seems like a good way to turn users/contributors away!?
+
+Thoughts?  What's the status here?  Should that wording be updated/removed?",
+comment,https://api.github.com/repos/apache/hunter/issues/30,https://api.github.com/repos/apache/hunter/issues/comments/IC_kwDOF9FF7c6dCYnn,hunter,IC_kwDOF9FF7c6dCYnn,30,NA,henrikingo,,,,NA,2025-02-04T17:40:41Z,2025-02-04T17:40:41Z,"> the ReadME has ""This is an unsupported open source project created by DataStax employees."" has that at the top.
+>
+> Is that accurate?
+
+Hi. This is obviously not accurate. The transition to an ASF project is still not complete. We are still waiting for confirmation for the project name, which then needs to be updated everywhere. Also the license headers at the top of each file weren't updated yet.",
+comment,https://api.github.com/repos/apache/hunter/issues/30,https://api.github.com/repos/apache/hunter/issues/comments/IC_kwDOF9FF7c6dCapi,hunter,IC_kwDOF9FF7c6dCapi,30,NA,brucearctor,,,,NA,2025-02-04T17:44:31Z,2025-02-04T17:44:31Z,"makes sense -- thanks for quick response!
+
+I found myself digging into ASF project on the [ lol ] hunt for somewhere interesting to contribute.  
+
+This project looks quite interesting; will give it a shot as a user, and intermittently check open issues for clear opportunities to contribute.  Cheers -",
+comment,https://api.github.com/repos/apache/hunter/issues/30,https://api.github.com/repos/apache/hunter/issues/comments/IC_kwDOF9FF7c6dCrps,hunter,IC_kwDOF9FF7c6dCrps,30,NA,henrikingo,,,,NA,2025-02-04T18:16:07Z,2025-02-04T18:16:07Z,"Excellent! Yes, we find it interesting and revolutionary too. 
+
+Would you like me to start creating some tickets of tasks I have in mind for the future?I can do that while we continue to go through naming and license header chores...",
+comment,https://api.github.com/repos/apache/hunter/issues/30,https://api.github.com/repos/apache/hunter/issues/comments/IC_kwDOF9FF7c6dCw3h,hunter,IC_kwDOF9FF7c6dCw3h,30,NA,brucearctor,,,,NA,2025-02-04T18:26:11Z,2025-02-04T18:26:11Z,"f there are issues I'd take a look and likely pick up things that are fitting.  I probably need to run/test/use Hunter at first :-) 
+
+On creating issues:  I play with some other OSS projects.  In the event of creating issues, you might want to create a convention and use a tag to indicate 'beginner', 'starter', 'newbie', 'good-first-issue', to make it even easier for potential contributors to get moving.  In addition to getting relevant contribution guide.  
+
+I am also generally happy to update docs as I go through things, as that helps others that try to follow a similar path in the future.  ",
+comment,https://api.github.com/repos/apache/hunter/issues/30,https://api.github.com/repos/apache/hunter/issues/comments/IC_kwDOF9FF7c6dEcrP,hunter,IC_kwDOF9FF7c6dEcrP,30,NA,Gerrrr,,,,NA,2025-02-04T22:13:01Z,2025-02-04T22:13:01Z,"Hi @brucearctor !
+
+Thank you for your interest in the project! 
+
+Please check out project documentation in https://github.com/apache/hunter/tree/master/docs. Documentation pages often reference reproducible examples from https://github.com/apache/hunter/tree/master/examples that use Docker Compose, so you can quickly set up Hunter against a test dataset.
+",
+issue,https://api.github.com/repos/apache/hunter/issues/31,,hunter,I_kwDOF9FF7c6oveOk,31,Adding Apache License Headers,dave2wave,,,,OPEN,2025-02-04T18:37:14Z,2025-02-05T15:58:27Z,When this mass change's PR is readied the commit should come from a PPMC member who is from the org that signed the SGA.,
