@@ -13,7 +13,10 @@ use log::{info, error};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Issue {
+    /// Fallback global id (base64–encoded) in case databaseId is missing.
     pub id: String,
+    /// Numeric issue id (as provided by GitHub’s REST API) if available.
+    pub databaseId: Option<u64>,
     pub number: u32,
     pub title: String,
     pub body: Option<String>,
@@ -27,19 +30,16 @@ pub struct Issue {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Comment {
+    /// Fallback global id.
     pub id: String,
+    /// Numeric comment id if available.
+    pub databaseId: Option<u64>,
     pub body: String,
     pub created_at: String,
     pub author: Option<AuthorNode>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Author {
-    pub login: String,
-    pub url: String,
-}
-
-// These types are used for the GraphQL query.
+// GraphQL response types.
 #[derive(Debug, Deserialize)]
 struct GraphQLResponse<T> {
     data: Option<T>,
@@ -71,6 +71,7 @@ struct IssueConnection {
 #[derive(Debug, Serialize, Deserialize)]
 struct IssueNode {
     id: String,
+    databaseId: Option<u64>,
     number: u32,
     title: String,
     body: Option<String>,
@@ -91,14 +92,23 @@ struct CommentConnection {
 #[derive(Debug, Serialize, Deserialize)]
 struct CommentNode {
     id: String,
+    databaseId: Option<u64>,
     body: String,
     createdAt: String,
     author: Option<AuthorNode>,
 }
 
+/// The author information. Note that we use an inline fragment on User (in the query) so that GitHub
+/// returns the numeric databaseId as well as name and email (if public).
 #[derive(Debug, Serialize, Deserialize)]
 struct AuthorNode {
     login: String,
+    #[serde(default)]
+    databaseId: Option<u64>,
+    #[serde(default)]
+    name: Option<String>,
+    #[serde(default)]
+    email: Option<String>,
     #[serde(default)]
     url: String,
 }
@@ -109,7 +119,7 @@ struct PageInfo {
     endCursor: Option<String>,
 }
 
-// For additional comment queries.
+// (Unused additional types for comment queries can remain here.)
 #[derive(Debug, Deserialize)]
 struct IssueData {
     issue: Option<CommentedIssue>,
@@ -120,7 +130,7 @@ struct CommentedIssue {
     comments: CommentConnection,
 }
 
-// New CSV row type.
+// CSV row type.
 #[derive(Debug, Serialize)]
 struct CsvRow {
     r#type: String,
@@ -147,7 +157,7 @@ fn fetch_issues(owner: &str, repo: &str) -> Result<Vec<Issue>, Box<dyn Error>> {
     let github_token = env::var("GITHUB_TOKEN")
         .map_err(|_| "GITHUB_TOKEN environment variable is not set.")?;
 
-    // Build the headers.
+    // Build headers.
     let mut headers = HeaderMap::new();
     headers.insert(
         AUTHORIZATION,
@@ -156,10 +166,10 @@ fn fetch_issues(owner: &str, repo: &str) -> Result<Vec<Issue>, Box<dyn Error>> {
     headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
     headers.insert("User-Agent", HeaderValue::from_static("rust-github-client"));
 
-    // Create the HTTP client.
     let client = Client::builder().default_headers(headers).build()?;
 
-    // Define the GraphQL query to fetch issues.
+    // GraphQL query with inline fragments requesting numeric ids (databaseId),
+    // name, and email for authors.
     let query = r#"
         query($owner: String!, $name: String!, $cursor: String) {
             repository(owner: $owner, name: $name) {
@@ -170,6 +180,7 @@ fn fetch_issues(owner: &str, repo: &str) -> Result<Vec<Issue>, Box<dyn Error>> {
                     }
                     nodes {
                         id
+                        databaseId
                         number
                         title
                         body
@@ -179,6 +190,11 @@ fn fetch_issues(owner: &str, repo: &str) -> Result<Vec<Issue>, Box<dyn Error>> {
                         closedAt
                         author {
                             login
+                            ... on User {
+                                databaseId
+                                name
+                                email
+                            }
                         }
                         comments(first: 100) {
                             pageInfo {
@@ -187,10 +203,16 @@ fn fetch_issues(owner: &str, repo: &str) -> Result<Vec<Issue>, Box<dyn Error>> {
                             }
                             nodes {
                                 id
+                                databaseId
                                 body
                                 createdAt
                                 author {
                                     login
+                                    ... on User {
+                                        databaseId
+                                        name
+                                        email
+                                    }
                                 }
                             }
                         }
@@ -237,12 +259,12 @@ fn fetch_issues(owner: &str, repo: &str) -> Result<Vec<Issue>, Box<dyn Error>> {
 
         let data = resp_json.data.ok_or("No data received from GitHub API.")?;
         let repository = data.repository.ok_or("Repository not found or access denied.")?;
-
         let issues_conn = repository.issues.ok_or("Repository issues field is missing.")?;
 
         for issue_node in issues_conn.nodes {
             let issue = Issue {
                 id: issue_node.id,
+                databaseId: issue_node.databaseId,
                 number: issue_node.number,
                 title: issue_node.title,
                 body: issue_node.body,
@@ -265,7 +287,6 @@ fn fetch_issues(owner: &str, repo: &str) -> Result<Vec<Issue>, Box<dyn Error>> {
             break;
         }
     }
-
     Ok(all_issues)
 }
 
@@ -276,7 +297,9 @@ pub fn fetch_issues_with_comments_csv(owner: &str, repo: &str, output_csv_path: 
 
     let path = Path::new(output_csv_path);
     let file = File::create(path)?;
-    let mut wtr = csv::Writer::from_writer(file);
+    let mut wtr = csv::WriterBuilder::new()
+    .has_headers(false)
+    .from_writer(file);
 
     // Write CSV header.
     wtr.write_record(&[
@@ -298,53 +321,81 @@ pub fn fetch_issues_with_comments_csv(owner: &str, repo: &str, output_csv_path: 
         "reactions",
     ])?;
 
-    // For constructing URLs.
     let base_issue_url = format!("https://api.github.com/repos/{}/{}/issues", owner, repo);
     let base_comment_url = format!("https://api.github.com/repos/{}/{}/issues/comments", owner, repo);
     let repo_name = repo.to_string();
 
     for issue in issues {
-        // Issue row.
+        // Create a reactions JSON string as in your old CSV.
+        let issue_reactions = format!(r#"{{"url": "https://api.github.com/repos/{}/{}/issues/{}/reactions", "total_count": 0, "+1": 0, "-1": 0, "laugh": 0, "hooray": 0, "confused": 0, "heart": 0, "rocket": 0, "eyes": 0}}"#, owner, repo, issue.number);
+        let issue_id = match issue.databaseId {
+            Some(dbid) => dbid.to_string(),
+            None => issue.id.clone(),
+        };
+        let (user_login, user_id, user_name, user_email) = if let Some(author) = issue.author {
+            (
+                author.login,
+                author.databaseId.map(|id| id.to_string()).unwrap_or_default(),
+                author.name.unwrap_or_default(),
+                author.email.unwrap_or_default(),
+            )
+        } else {
+            (String::new(), String::new(), String::new(), String::new())
+        };
+
         let issue_row = CsvRow {
             r#type: "issue".to_string(),
             issue_url: format!("{}/{}", base_issue_url, issue.number),
-            comment_url: "".to_string(),
+            comment_url: format!("{}/{}", base_issue_url, issue.number),
             repo_name: repo_name.clone(),
-            id: issue.id,
+            id: issue_id,
             issue_num: issue.number,
             title: issue.title,
-            user_login: issue.author.map(|a| a.login).unwrap_or_default(),
-            user_id: "".to_string(),
-            user_name: "".to_string(),
-            user_email: "".to_string(),
+            user_login,
+            user_id,
+            user_name,
+            user_email,
             issue_state: issue.state,
             created_at: issue.created_at,
             updated_at: issue.updated_at,
             body: issue.body.unwrap_or_default(),
-            reactions: "".to_string(),
+            reactions: issue_reactions,
         };
         wtr.serialize(issue_row)?;
 
-        // Comment rows.
         for comment_node in issue.comments.nodes {
+            let comment_reactions = format!(r#"{{"url": "https://api.github.com/repos/{}/{}/issues/comments/{}/reactions", "total_count": 0, "+1": 0, "-1": 0, "laugh": 0, "hooray": 0, "confused": 0, "heart": 0, "rocket": 0, "eyes": 0}}"#, owner, repo, comment_node.id);
+            let comment_id = match comment_node.databaseId {
+                Some(dbid) => dbid.to_string(),
+                None => comment_node.id.clone(),
+            };
+            let (c_user_login, c_user_id, c_user_name, c_user_email) = if let Some(author) = comment_node.author {
+                (
+                    author.login,
+                    author.databaseId.map(|id| id.to_string()).unwrap_or_default(),
+                    author.name.unwrap_or_default(),
+                    author.email.unwrap_or_default(),
+                )
+            } else {
+                (String::new(), String::new(), String::new(), String::new())
+            };
             let comment_row = CsvRow {
                 r#type: "comment".to_string(),
                 issue_url: format!("{}/{}", base_issue_url, issue.number),
                 comment_url: format!("{}/{}", base_comment_url, comment_node.id),
                 repo_name: repo_name.clone(),
-                id: comment_node.id,
+                id: comment_id,
                 issue_num: issue.number,
                 title: "NA".to_string(),
-                user_login: comment_node.author.map(|a| a.login).unwrap_or_default(),
-                user_id: "".to_string(),
-                user_name: "".to_string(),
-                user_email: "".to_string(),
+                user_login: c_user_login,
+                user_id: c_user_id,
+                user_name: c_user_name,
+                user_email: c_user_email,
                 issue_state: "NA".to_string(),
-                // Clone createdAt so it can be used twice.
                 created_at: comment_node.createdAt.clone(),
-                updated_at: comment_node.createdAt, // no separate updated time
+                updated_at: comment_node.createdAt,
                 body: comment_node.body,
-                reactions: "".to_string(),
+                reactions: comment_reactions,
             };
             wtr.serialize(comment_row)?;
         }

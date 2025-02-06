@@ -33,7 +33,7 @@ use crate::repo::*;
 use crate::statistics::*;
 use crate::utils::*;
 use pre_post_incubation_analysis::pre_post_analysis;
-use github_issues::{fetch_issues_with_comments_csv};
+use github_issues::fetch_issues_with_comments_csv;
 
 #[derive(StructOpt)]
 pub struct Args {
