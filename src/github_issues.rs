@@ -298,8 +298,8 @@ pub fn fetch_issues_with_comments_csv(owner: &str, repo: &str, output_csv_path: 
     let path = Path::new(output_csv_path);
     let file = File::create(path)?;
     let mut wtr = csv::WriterBuilder::new()
-    .has_headers(false)
-    .from_writer(file);
+        .has_headers(false)
+        .from_writer(file);
 
     // Write CSV header.
     wtr.write_record(&[
@@ -403,5 +403,106 @@ pub fn fetch_issues_with_comments_csv(owner: &str, repo: &str, output_csv_path: 
 
     wtr.flush()?;
     info!("Fetched {} issues from {}/{}", count, owner, repo);
+    Ok(())
+}
+
+/// NEW FUNCTION: Write grouped issue statistics by developer (for issues and comments)
+/// into separate CSV files based on the developer’s name. The CSV format is:
+/// date_time,file,committer_name,committer_email,comment_url/issue_url,month
+///
+/// For example, a developer named "Sean McCarthy" will have a CSV file called "Sean McCarthy.csv".
+pub fn write_issue_stats_grouped_by_developer(owner: &str, repo: &str, output_folder: &str) -> Result<(), Box<dyn Error>> {
+    use std::collections::HashMap;
+    use chrono::DateTime;
+    use chrono::FixedOffset;
+
+    // Local struct representing one row of issue statistics.
+    #[derive(Debug, Serialize)]
+    struct IssueDevStat {
+        date_time: String,
+        file: String,
+        committer_name: String,
+        committer_email: String,
+        url: String,
+        month: String,
+    }
+
+    // Fetch issues.
+    let issues = fetch_issues(owner, repo)?;
+    let mut grouped_stats: HashMap<String, Vec<IssueDevStat>> = HashMap::new();
+
+    // Helper closure to extract the month (as two-digit number) from a RFC3339 date string.
+    let extract_month = |dt_str: &str| -> String {
+        if let Ok(dt) = DateTime::parse_from_rfc3339(dt_str) {
+            dt.format("%m").to_string()
+        } else {
+            String::from("NA")
+        }
+    };
+
+    // Process each issue.
+    for issue in issues.iter() {
+        // For the issue itself.
+        if let Some(author) = &issue.author {
+            let name = author.name.clone().unwrap_or(author.login.clone());
+            let email = author.email.clone().unwrap_or_default();
+            let month = extract_month(&issue.created_at);
+            let url = format!("https://github.com/{}/{}/issues/{}", owner, repo, issue.number);
+            let stat = IssueDevStat {
+                date_time: issue.created_at.clone(),
+                file: issue.title.clone(),
+                committer_name: name.clone(),
+                committer_email: email,
+                url,
+                month,
+            };
+            grouped_stats.entry(name).or_default().push(stat);
+        }
+        // For each comment on the issue.
+        for comment in issue.comments.nodes.iter() {
+            if let Some(author) = &comment.author {
+                let name = author.name.clone().unwrap_or(author.login.clone());
+                let email = author.email.clone().unwrap_or_default();
+                let month = extract_month(&comment.createdAt);
+                // Use the issue title as the "file" (as a placeholder).
+                let url = format!("https://github.com/{}/{}/issues/comments/{}", owner, repo, comment.id);
+                let stat = IssueDevStat {
+                    date_time: comment.createdAt.clone(),
+                    file: issue.title.clone(),
+                    committer_name: name.clone(),
+                    committer_email: email,
+                    url,
+                    month,
+                };
+                grouped_stats.entry(name).or_default().push(stat);
+            }
+        }
+    }
+
+    // Ensure the output folder exists.
+    std::fs::create_dir_all(output_folder)?;
+
+    // For each developer group, write a separate CSV file named after the developer.
+    for (dev_name, stats) in grouped_stats {
+        let file_path = format!("{}/{}.csv", output_folder, dev_name);
+        let file = File::create(&file_path)?;
+        let mut writer = csv::Writer::from_writer(file);
+        // Write header.
+        writer.write_record(&["date_time", "file", "committer_name", "committer_email", "comment_url/issue_url", "month"])?;
+        // Write each record.
+        for stat in stats {
+            writer.write_record(&[
+                stat.date_time,
+                stat.file,
+                stat.committer_name,
+                stat.committer_email,
+                stat.url,
+                stat.month,
+            ])?;
+        }
+        writer.flush()?;
+        info!("Issue stats written to {}", file_path);
+    }
+
     Ok(())
 }

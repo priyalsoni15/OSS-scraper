@@ -1,4 +1,4 @@
-// main.rs
+// src/main.rs
 // #![deny(warnings)]
 use calamine::{open_workbook, Reader, Xlsx};
 use git2::Repository;
@@ -168,6 +168,11 @@ pub struct Args {
     #[structopt(name = "dev-stats-grouped", long)]
     /// If set, write separate CSV files grouped by developer (per incubation month)
     flag_dev_stats_grouped: bool,
+
+    // ==== NEW FLAG: Issue statistics grouped output ====
+    #[structopt(name = "issue-stats-grouped", long)]
+    /// If set, write separate CSV files grouped by developer (per month) for issues and comments
+    flag_issue_stats_grouped: bool,
 }
 
 fn list_projects(metadata_filepath: &str) -> indexmap::IndexSet<Project> {
@@ -572,6 +577,50 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // --- EARLY EXIT: If fetching GitHub issues, do not load metadata ---
     if args.flag_fetch_github_issues {
+        // NEW: Check for issue-stats-grouped flag for developer grouping on issues.
+        if args.flag_issue_stats_grouped {
+            if let Some(github_url) = &args.flag_github_url {
+                let trimmed = github_url.trim_end_matches(".git");
+                let parts: Vec<&str> = trimmed.split('/').collect();
+                if parts.len() < 2 {
+                    error!("Invalid GitHub URL provided: {}", github_url);
+                    return Ok(());
+                }
+                let owner = parts[parts.len() - 2];
+                let repo = parts[parts.len() - 1];
+                let output_folder = args.flag_github_output_folder.as_deref().unwrap_or("github_issues");
+                std::fs::create_dir_all(output_folder)?;
+                github_issues::write_issue_stats_grouped_by_developer(owner, repo, output_folder)?;
+                info!("Successfully wrote grouped issue stats for {}/{}", owner, repo);
+            } else {
+                let metadata_filepath = if let Some(path) = &args.flag_metadata_filepath {
+                    path
+                } else {
+                    "../../apache-projects.xlsx"
+                };
+                let projects = list_projects(metadata_filepath);
+                for project in projects {
+                    let github_url = project.path.trim();
+                    let parts: Vec<&str> = github_url.split('/').collect();
+                    if parts.len() < 2 {
+                        error!("Invalid GitHub URL for project {}: {}", project.name, github_url);
+                        continue;
+                    }
+                    let owner = parts[parts.len() - 2];
+                    let repo = parts[parts.len() - 1];
+                    let output_folder = args.flag_github_output_folder.as_deref().unwrap_or("github_issues");
+                    github_issues::write_issue_stats_grouped_by_developer(owner, repo, output_folder)?;
+                    info!("Successfully wrote grouped issue stats for {}/{}", owner, repo);
+                }
+            }
+            let duration = start.elapsed();
+            let seconds = duration.as_secs() % 60;
+            let minutes = (duration.as_secs() / 60) % 60;
+            let hours = (duration.as_secs() / 60) / 60;
+            log::info!("Grouped GitHub issues stats fetching completed in {}h:{}m:{}s", hours, minutes, seconds);
+            return Ok(());
+        }
+
         if let Some(github_url) = &args.flag_github_url {
             let trimmed = github_url.trim_end_matches(".git");
             let parts: Vec<&str> = trimmed.split('/').collect();
