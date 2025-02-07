@@ -1,3 +1,4 @@
+project,start_date,end_date,status,incubation_month,commit_sha,email,name,date,timestamp,filename,change_type,lines_added,lines_deleted,commit_message
 hunter,2020-11-14,2025-02-05,,1,62f5ead34983bfba49fe04d176a10a3a0c65a21f,pkolaczk@datastax.com,Piotr Kołaczkowski,2020-11-14 10:36:40 UTC,1605350200,.gitignore,A,6,0,Initial commit _nl_ 
 hunter,2020-11-14,2025-02-05,,1,62f5ead34983bfba49fe04d176a10a3a0c65a21f,pkolaczk@datastax.com,Piotr Kołaczkowski,2020-11-14 10:36:40 UTC,1605350200,README.md,A,75,0,Initial commit _nl_ 
 hunter,2020-11-14,2025-02-05,,1,62f5ead34983bfba49fe04d176a10a3a0c65a21f,pkolaczk@datastax.com,Piotr Kołaczkowski,2020-11-14 10:36:40 UTC,1605350200,hunter.py,A,55,0,Initial commit _nl_ 

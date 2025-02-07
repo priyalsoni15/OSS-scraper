@@ -814,7 +814,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         let metrics = dev_stats.compute_individual_dev_stats(&args);
                         if let Ok(metrics) = metrics {
                             let mut writer = csv::WriterBuilder::default()
-                                .has_headers(false)
+                                .has_headers(true)
                                 .from_path(format!("{}/{}-commit-file-dev.csv", data_folder_path, p.name.as_str()))
                                 .unwrap();
                             for m in metrics {

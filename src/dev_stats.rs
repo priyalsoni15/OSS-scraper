@@ -20,6 +20,7 @@ pub struct DevStats<'a> {
     #[serde(skip_serializing)]
     pub java_path: &'a str,
     /// Metrics
+    #[serde(flatten)]
     pub metrics: CommitFileMetrics,
 }
 
