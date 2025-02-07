@@ -107,7 +107,7 @@ pub struct Args {
     flag_metadata_filepath: Option<String>,
 
     #[structopt(name = "commit-devs-files", long)]
-    /// Return a list of commits and the files changed in each file together with whom changed the file
+    /// Return a list of commits and the files changed in each file together with who changed the file
     flag_commit_devs_files: bool,
 
     #[structopt(name = "time-window", long)]
@@ -163,6 +163,11 @@ pub struct Args {
     #[structopt(name = "online-status", long)]
     /// Status for online repository analysis (e.g., graduated, retired)
     flag_online_status: Option<String>,
+
+    // ==== NEW FLAG: Developer statistics grouped output ====
+    #[structopt(name = "dev-stats-grouped", long)]
+    /// If set, write separate CSV files grouped by developer (per incubation month)
+    flag_dev_stats_grouped: bool,
 }
 
 fn list_projects(metadata_filepath: &str) -> indexmap::IndexSet<Project> {
@@ -872,21 +877,36 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 let checkout = repo.checkout_master_main_trunk(&args);
                 if let Ok(_checkout) = checkout {
                     log::info!("checkout {}", repo.commits.len());
+                    // --- Here we check if we want grouped developer stats ---
                     if args.flag_commit_devs_files {
-                        let dev_stats = DevStats::new(p.name.as_str(), &repo, &java_path);
-                        let metrics = dev_stats.compute_individual_dev_stats(&args);
-                        if let Ok(metrics) = metrics {
-                            let mut writer = csv::WriterBuilder::default()
-                                .has_headers(true)
-                                .from_path(format!("{}/{}-commit-file-dev.csv", data_folder_path, p.name.as_str()))
-                                .unwrap();
-                            for m in metrics {
-                                if let Err(e) = writer.serialize(m) {
-                                    error!("{} - cannot serialize metric value: {}", p.name.as_str(), e);
+                        if args.flag_dev_stats_grouped {
+                            // Use the new function to write separate CSV files grouped by developer per incubation month.
+                            let dev_stats = DevStats::new(p.name.as_str(), &repo, &java_path);
+                            match dev_stats.write_dev_stats_grouped_by_developer(&args) {
+                                Ok(()) => {
+                                    info!("Grouped developer stats written for project {}", p.name);
+                                }
+                                Err(e) => {
+                                    error!("{} - error writing grouped developer stats: {}", p.name.as_str(), e);
                                 }
                             }
                         } else {
-                            error!("{} cannot extract the metrics", p.name.as_str());
+                            // Retain the original functionality: write one CSV with all commit file metrics.
+                            let dev_stats = DevStats::new(p.name.as_str(), &repo, &java_path);
+                            let metrics = dev_stats.compute_individual_dev_stats(&args);
+                            if let Ok(metrics) = metrics {
+                                let mut writer = csv::WriterBuilder::default()
+                                    .has_headers(true)
+                                    .from_path(format!("{}/{}-commit-file-dev.csv", data_folder_path, p.name.as_str()))
+                                    .unwrap();
+                                for m in metrics {
+                                    if let Err(e) = writer.serialize(m) {
+                                        error!("{} - cannot serialize metric value: {}", p.name.as_str(), e);
+                                    }
+                                }
+                            } else {
+                                error!("{} cannot extract the metrics", p.name.as_str());
+                            }
                         }
                     } else {
                         let mut stats = Stats::new(

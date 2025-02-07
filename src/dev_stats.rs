@@ -2,24 +2,20 @@ use crate::utils::*;
 use crate::{repo::Repo, Args};
 use git2::{DiffFindOptions, DiffOptions, Error};
 use serde::Serialize;
+use std::collections::HashMap;
+use std::fs::File;
+use std::io::Write;
 
 #[derive(Serialize, Clone)]
 pub struct DevStats<'a> {
-    /// Project's name
     pub project: &'a str,
-    /// Project's start date - usually formatted as Y-m-d
     pub start_date: &'a str,
-    /// Project's end date - usually formatted as Y-m-d
     pub end_date: &'a str,
-    /// Project status: graduated, retired
     pub status: &'a str,
-    /// Git repo
     #[serde(skip_serializing)]
     repo: &'a Repo<'a>,
-    /// Java path
     #[serde(skip_serializing)]
     pub java_path: &'a str,
-    /// Metrics
     #[serde(flatten)]
     pub metrics: CommitFileMetrics,
 }
@@ -52,9 +48,6 @@ impl<'a> DevStats<'a> {
         }
     }
 
-    /// Compute statistics per developer from each commit
-    /// We want:
-    /// incubation_month, commit sha, email, name, date, timestamp (unix), filename, change_type, loc added, loc deleted
     pub fn compute_individual_dev_stats(&self, args: &Args) -> Result<Vec<DevStats>, Error> {
         let inc_months_commits = if let None = args.flag_time_window {
             self.repo.inc_month_commits.clone()
@@ -115,7 +108,6 @@ impl<'a> DevStats<'a> {
                     let mut lines_deleted = 0;
                     let mut diff_find_options = DiffFindOptions::new();
 
-                    // set the rename threshold to 50, the default Git one
                     diff.find_similar(Some(diff_find_options.rename_threshold(50)))?;
 
                     let mut file_data = indexmap::IndexMap::<String, (usize, usize, String)>::new();
@@ -206,5 +198,41 @@ impl<'a> DevStats<'a> {
             }
         }
         Ok(output)
+    }
+
+    /// Writes grouped developer statistics into separate CSV files
+    pub fn write_dev_stats_grouped_by_developer(&self, args: &Args) -> Result<(), Box<dyn std::error::Error>> {
+        let stats = self.compute_individual_dev_stats(args)?;
+
+        let mut grouped_stats: HashMap<String, Vec<&CommitFileMetrics>> = HashMap::new();
+
+        for stat in &stats {
+            grouped_stats.entry(stat.metrics.email.clone()).or_default().push(&stat.metrics);
+        }
+
+        let output_folder = args.flag_output_folder.as_deref().unwrap_or("output");
+        std::fs::create_dir_all(output_folder)?;
+
+        for (email, metrics) in grouped_stats {
+            let sanitized_email = email.replace("@", "_at_").replace(".", "_");
+            let file_path = format!("{}/{}_dev_stats.csv", output_folder, sanitized_email);
+
+            let mut writer = csv::Writer::from_writer(File::create(&file_path)?);
+            writer.write_record(&["date_time", "file", "committer_name", "committer_email", "month"])?;
+
+            for metric in metrics {
+                writer.write_record(&[
+                    metric.date.clone(),
+                    metric.filename.clone(),
+                    metric.name.clone(),
+                    metric.email.clone(),
+                    metric.incubation_month.to_string(),
+                ])?;
+            }
+            writer.flush()?;
+            log::info!("Developer stats written to {}", file_path);
+        }
+
+        Ok(())
     }
 }
