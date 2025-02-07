@@ -64,9 +64,9 @@ _(Github URL is the project to analyze, and the output folder stores the CSV ana
 
     ./target/debug/miner --commit-devs-files --git-online-url=https://github.com/apache/hunter.git --commit-graphql --online-start-date=2020-11-14 --online-end-date=2025-02-05 --online-status="" --threads=2 --output-folder=output
 
-### Collecting commit metrics (excluding commit details)
+### Developer commit metrics (All months)
 
-    ./target/debug/miner --skip-emails --skip-sokrates --ignore-start-end-date --time-window=30 --threads=2 --output-folder=output --git-folder=input
+    ./target/debug/miner --skip-emails --skip-sokrates --commit-devs-files --ignore-start-end-date --commit-devs-files --dev-stats-grouped --time-window=30 --threads=2 --output-folder=output --git-folder=input
 
 ### Full analysis (excluding email analysis, for local Git repositories)
 
