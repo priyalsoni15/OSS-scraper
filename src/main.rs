@@ -1,3 +1,4 @@
+// main.rs
 // #![deny(warnings)]
 use calamine::{open_workbook, Reader, Xlsx};
 use git2::Repository;
@@ -15,6 +16,8 @@ use structopt::StructOpt;
 use dotenv::dotenv;
 
 mod commits_metrics;
+mod commit_metrics_clone;    // NEW MODULE for clone-from-online repo analysis
+mod commit_metrics_graphql;   // NEW MODULE for GraphQL-based analysis
 mod dev_stats;
 mod emails;
 mod github_issues;
@@ -139,6 +142,27 @@ pub struct Args {
     #[structopt(name = "github-url", long)]
     /// GitHub repository URL to fetch issues from (e.g., https://github.com/apache/hunter.git)
     flag_github_url: Option<String>,
+
+    // ==== NEW FLAGS FOR ONLINE COMMIT ANALYSIS ====
+    #[structopt(name = "git-online-url", long)]
+    /// Provide an online Git repository URL (.git) to clone and analyze commits
+    flag_git_online_url: Option<String>,
+
+    #[structopt(name = "commit-graphql", long)]
+    /// Use GraphQL API to fetch commit metrics for the online repository instead of cloning
+    flag_commit_graphql: bool,
+
+    #[structopt(name = "online-start-date", long)]
+    /// Start date for online repository analysis (format YYYY-MM-DD)
+    flag_online_start_date: Option<String>,
+
+    #[structopt(name = "online-end-date", long)]
+    /// End date for online repository analysis (format YYYY-MM-DD)
+    flag_online_end_date: Option<String>,
+
+    #[structopt(name = "online-status", long)]
+    /// Status for online repository analysis (e.g., graduated, retired)
+    flag_online_status: Option<String>,
 }
 
 fn list_projects(metadata_filepath: &str) -> indexmap::IndexSet<Project> {
@@ -576,6 +600,45 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         return Ok(());
     }
     // --- End early exit for GitHub issues ---
+
+    // ==== NEW: Check for online commit analysis ====
+    if args.flag_commit_devs_files {
+        if let Some(online_url) = &args.flag_git_online_url {
+            // For online repository analysis you must also provide start/end dates (or defaults will be used)
+            let online_start_date = args
+                .flag_online_start_date
+                .clone()
+                .unwrap_or_else(|| "1970-01-01".to_string());
+            let online_end_date = args
+                .flag_online_end_date
+                .clone()
+                .unwrap_or_else(|| "2100-01-01".to_string());
+            let online_status = args.flag_online_status.clone().unwrap_or_default();
+            if args.flag_commit_graphql {
+                commit_metrics_graphql::analyze_online_repo(
+                    online_url,
+                    &args,
+                    &online_start_date,
+                    &online_end_date,
+                    &online_status,
+                )?;
+            } else {
+                commit_metrics_clone::analyze_online_repo(
+                    online_url,
+                    &args,
+                    &online_start_date,
+                    &online_end_date,
+                    &online_status,
+                )?;
+            }
+            let duration = start.elapsed();
+            let seconds = duration.as_secs() % 60;
+            let minutes = (duration.as_secs() / 60) % 60;
+            let hours = (duration.as_secs() / 60) / 60;
+            log::info!("Online commit analysis completed in {}h:{}m:{}s", hours, minutes, seconds);
+            return Ok(());
+        }
+    }
 
     // Load projects via git folder or metadata
     let mut projects = if args.flag_git_folder.is_some() {
