@@ -48,6 +48,10 @@ Run the following commands to prepare the environment and build the tool:
 
 _(Github URL is the project to analyze, and the output folder stores the CSV analysis)_
 
+### Fetching issues sorted by developers in a GitHub repository (separate csvs for each developer)
+
+    ./target/debug/miner --fetch-github-issues  --issue-stats-grouped --github-url=https://github.com/apache/hunter.git --github-output-folder=output
+
 ### Collecting commit details (file changes, authors, hashes, etc.)
 
     ./target/debug/miner --skip-emails --skip-sokrates --ignore-start-end-date --commit-devs-files --time-window=30 --threads=2 --output-folder=output --git-folder=input
