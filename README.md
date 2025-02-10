@@ -36,6 +36,7 @@ Run the following commands to prepare the environment and build the tool:
 
     cargo update
     cargo clean
+    cargo build
     cargo fix --bin "miner"
 
 ------------------------
