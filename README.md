@@ -71,7 +71,7 @@ _(Github URL is the project to analyze, and the output folder stores the CSV ana
 
 ### Developer commit metrics (All months)
 
-    ./target/debug/miner --skip-emails --skip-sokrates --commit-devs-files --ignore-start-end-date --commit-devs-files --dev-stats-grouped --time-window=30 --threads=2 --output-folder=output --git-folder=input
+    ./target/debug/miner --skip-emails --skip-sokrates --commit-devs-files --ignore-start-end-date --dev-stats-grouped --time-window=30 --threads=2 --output-folder=output --git-folder=input
 
 ### Full analysis (excluding email analysis, for local Git repositories)
 
