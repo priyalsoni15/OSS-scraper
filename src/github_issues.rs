@@ -414,7 +414,7 @@ pub fn fetch_issues_with_comments_csv(owner: &str, repo: &str, output_csv_path: 
 pub fn write_issue_stats_grouped_by_developer(owner: &str, repo: &str, output_folder: &str) -> Result<(), Box<dyn Error>> {
     use std::collections::HashMap;
     use chrono::DateTime;
-    use chrono::FixedOffset;
+    
 
     // Local struct representing one row of issue statistics.
     #[derive(Debug, Serialize)]

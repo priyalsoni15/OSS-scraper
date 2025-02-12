@@ -207,25 +207,26 @@ impl<'a> DevStats<'a> {
         let mut grouped_stats: HashMap<String, Vec<&CommitFileMetrics>> = HashMap::new();
 
         for stat in &stats {
-            grouped_stats.entry(stat.metrics.email.clone()).or_default().push(&stat.metrics);
+            grouped_stats.entry(stat.metrics.name.clone()).or_default().push(&stat.metrics);
         }
 
         let output_folder = args.flag_output_folder.as_deref().unwrap_or("output");
         std::fs::create_dir_all(output_folder)?;
 
-        for (email, metrics) in grouped_stats {
-            let sanitized_email = email.replace("@", "_at_").replace(".", "_");
-            let file_path = format!("{}/{}_dev_stats.csv", output_folder, sanitized_email);
-
+        for (dev_name, metrics) in grouped_stats {
+            let file_path = format!("{}/{}.csv", output_folder, dev_name);
             let mut writer = csv::Writer::from_writer(File::create(&file_path)?);
-            writer.write_record(&["date_time", "file", "committer_name", "committer_email", "month"])?;
+            writer.write_record(&["date_time", "file", "committer_name", "committer_email", "commit_link","month"])?;
 
             for metric in metrics {
+                // Compute commit link as "https://github.com/{project}/commit/{commit_sha}"
+                let commit_link = format!("https://github.com/{}/commit/{}", self.project, metric.commit_sha);
                 writer.write_record(&[
                     metric.date.clone(),
                     metric.filename.clone(),
                     metric.name.clone(),
                     metric.email.clone(),
+                    commit_link,
                     metric.incubation_month.to_string(),
                 ])?;
             }

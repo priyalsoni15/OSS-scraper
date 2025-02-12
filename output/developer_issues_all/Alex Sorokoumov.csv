@@ -1,3 +1,0 @@
-date_time,file,committer_name,committer_email,comment_url/issue_url,month
-2024-10-03T03:33:57Z,graphite events do not work as documented.,Alex Sorokoumov,,https://github.com/apache/hunter/issues/24,10
-2025-02-04T22:13:01Z,Update Readme to clarify support status?,Alex Sorokoumov,,https://github.com/apache/hunter/issues/comments/IC_kwDOF9FF7c6dEcrP,02

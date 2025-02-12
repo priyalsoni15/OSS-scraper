@@ -226,7 +226,7 @@ impl<'a> CommitsMetrics<'a> {
         let diffs = commits
             .iter()
             .filter_map(|c| {
-                let a = if c.parents().len() == 1 {
+                let a = if c.parents().len() >= 1 {
                     let parent = c.parent(0).ok()?;
                     Some(parent.tree().ok()?)
                 } else {
