@@ -94,7 +94,7 @@ struct RestFile {
     deletions: u32,
 }
 
-// CSV row type matching your sample output.
+// --- Added `commit_url` field below ---
 #[derive(Debug, serde::Serialize)]
 struct CsvRow {
     project: String,
@@ -103,6 +103,7 @@ struct CsvRow {
     status: String,
     incubation_month: String,
     commit_sha: String,
+    commit_url: String,                // <--- NEW FIELD
     email: String,
     name: String,
     date: String,
@@ -199,7 +200,6 @@ pub fn analyze_online_repo(
         let data = resp_json.data.ok_or("No data received from GitHub GraphQL API.")?;
         let repo_data = data.repository.ok_or("Repository not found or access denied.")?;
         let default_branch = repo_data.defaultBranchRef.ok_or("Default branch not found.")?;
-        // Unwrap the target before accessing history.
         let commit_history_target = default_branch.target.ok_or("Default branch target not found.")?;
         let history = commit_history_target.history;
 
@@ -221,25 +221,25 @@ pub fn analyze_online_repo(
 
     // For each commit, fetch detailed commit info (REST API) to get file-level changes.
     for commit in all_commits {
-        let commit_rest_url = format!("https://api.github.com/repos/{}/{}/commits/{}", owner, repo, commit.oid);
+        let commit_rest_url = format!(
+            "https://api.github.com/repos/{}/{}/commits/{}",
+            owner, repo, commit.oid
+        );
         let rest_response = client.get(&commit_rest_url).send()?;
         if !rest_response.status().is_success() {
             error!("Failed to fetch commit details for {}: status {}", commit.oid, rest_response.status());
             continue;
         }
         let rest_commit: RestCommit = rest_response.json()?;
-        // Parse commit date and timestamp.
         let commit_date = DateTime::parse_from_rfc3339(&commit.committedDate)?
             .with_timezone(&Utc);
         let timestamp = commit_date.timestamp();
-        // Calculate incubation month (using a default time window of 30 days if not provided).
         let time_window = args.flag_time_window.unwrap_or(30);
         let start_naive = NaiveDate::parse_from_str(start_date, "%Y-%m-%d")?;
         let commit_naive = commit_date.date_naive();
         let days_diff = (commit_naive - start_naive).num_days();
         let incubation_month = ((days_diff / time_window) + 1).to_string();
 
-        // For each file in the commit, write a CSV row.
         if let Some(files) = rest_commit.files {
             for file_detail in files {
                 let row = CsvRow {
@@ -249,6 +249,7 @@ pub fn analyze_online_repo(
                     status: status.to_string(),
                     incubation_month: incubation_month.clone(),
                     commit_sha: commit.oid.clone(),
+                    commit_url: format!("https://github.com/{}/{}/commit/{}", owner, repo, commit.oid), // <--- POPULATE URL
                     email: commit.author.as_ref().and_then(|a| a.email.clone()).unwrap_or_default(),
                     name: commit.author.as_ref().and_then(|a| a.name.clone()).unwrap_or_default(),
                     date: commit.committedDate.clone(),
@@ -270,6 +271,7 @@ pub fn analyze_online_repo(
                 status: status.to_string(),
                 incubation_month: incubation_month.clone(),
                 commit_sha: commit.oid.clone(),
+                commit_url: format!("https://github.com/{}/{}/commit/{}", owner, repo, commit.oid), // <--- POPULATE URL
                 email: commit.author.as_ref().and_then(|a| a.email.clone()).unwrap_or_default(),
                 name: commit.author.as_ref().and_then(|a| a.name.clone()).unwrap_or_default(),
                 date: commit.committedDate.clone(),

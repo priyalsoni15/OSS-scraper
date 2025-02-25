@@ -2,3 +2,7 @@
 /target/*
 input/*
 .env
+output/*
+archive/*
+logs/*
+*.log

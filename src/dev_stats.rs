@@ -1,10 +1,10 @@
+// dev_stats.rs
 use crate::utils::*;
 use crate::{repo::Repo, Args};
 use git2::{DiffFindOptions, DiffOptions, Error};
 use serde::Serialize;
 use std::collections::HashMap;
 use std::fs::File;
-use std::io::Write;
 
 #[derive(Serialize, Clone)]
 pub struct DevStats<'a> {
@@ -13,7 +13,7 @@ pub struct DevStats<'a> {
     pub end_date: &'a str,
     pub status: &'a str,
     #[serde(skip_serializing)]
-    repo: &'a Repo<'a>,
+    pub repo: &'a Repo<'a>,
     #[serde(skip_serializing)]
     pub java_path: &'a str,
     #[serde(flatten)]
@@ -33,6 +33,10 @@ pub struct CommitFileMetrics {
     pub lines_added: usize,
     pub lines_deleted: usize,
     pub commit_message: String,
+
+    // NEW FIELD: can be populated by external code (e.g., commit_metrics_clone)
+    #[serde(default)]
+    pub commit_url: String,
 }
 
 impl<'a> DevStats<'a> {
@@ -77,7 +81,6 @@ impl<'a> DevStats<'a> {
                 let date = convert_time(&commit.time()).to_string();
 
                 let (_diffopts, mut diffopts2) = (DiffOptions::new(), DiffOptions::new());
-
                 let a = if commit.parents().len() == 1 {
                     let parent = commit.parent(0);
                     if let Ok(parent) = parent {
@@ -155,14 +158,13 @@ impl<'a> DevStats<'a> {
                                     }
                                     lines_deleted += 1;
                                 }
-
                                 _ => {}
                             }
 
                             true
                         });
 
-                    for (k, (lines_added, lines_deleted, change_type)) in file_data {
+                    for (filename, (added, deleted, change_type)) in file_data {
                         let m = CommitFileMetrics {
                             incubation_month: *month,
                             commit_sha: commit_sha.clone(),
@@ -170,10 +172,10 @@ impl<'a> DevStats<'a> {
                             name: name.to_string(),
                             date: date.clone(),
                             timestamp: commit.time().seconds(),
-                            filename: k,
+                            filename,
                             change_type: change_type.to_string(),
-                            lines_added,
-                            lines_deleted,
+                            lines_added: added,
+                            lines_deleted: deleted,
                             commit_message: if args.flag_ignore_commit_message {
                                 "".to_string()
                             } else {
@@ -183,6 +185,7 @@ impl<'a> DevStats<'a> {
                                     .replace("\n", " _nl_ ")
                                     .to_string()
                             },
+                            commit_url: String::new(), // default empty; can be set externally
                         };
                         output.push(DevStats {
                             project: self.project,
@@ -191,7 +194,7 @@ impl<'a> DevStats<'a> {
                             end_date: self.end_date,
                             java_path: self.java_path,
                             repo: self.repo,
-                            metrics: m.clone(),
+                            metrics: m,
                         });
                     }
                 }
@@ -205,7 +208,6 @@ impl<'a> DevStats<'a> {
         let stats = self.compute_individual_dev_stats(args)?;
 
         let mut grouped_stats: HashMap<String, Vec<&CommitFileMetrics>> = HashMap::new();
-
         for stat in &stats {
             grouped_stats.entry(stat.metrics.name.clone()).or_default().push(&stat.metrics);
         }
@@ -216,11 +218,26 @@ impl<'a> DevStats<'a> {
         for (dev_name, metrics) in grouped_stats {
             let file_path = format!("{}/{}.csv", output_folder, dev_name);
             let mut writer = csv::Writer::from_writer(File::create(&file_path)?);
-            writer.write_record(&["date_time", "file", "committer_name", "committer_email", "commit_link","month"])?;
+
+            // Example header row
+            writer.write_record(&[
+                "date_time",
+                "file",
+                "committer_name",
+                "committer_email",
+                "commit_link",
+                "month"
+            ])?;
 
             for metric in metrics {
-                // Compute commit link as "https://github.com/{project}/commit/{commit_sha}"
-                let commit_link = format!("https://github.com/{}/commit/{}", self.project, metric.commit_sha);
+                // We'll build a link in the same style:
+                let commit_link = if metric.commit_url.is_empty() {
+                    // fallback if not set
+                    format!("https://github.com/{}/commit/{}", self.project, metric.commit_sha)
+                } else {
+                    metric.commit_url.clone()
+                };
+
                 writer.write_record(&[
                     metric.date.clone(),
                     metric.filename.clone(),
@@ -230,6 +247,7 @@ impl<'a> DevStats<'a> {
                     metric.incubation_month.to_string(),
                 ])?;
             }
+
             writer.flush()?;
             log::info!("Developer stats written to {}", file_path);
         }
