@@ -1,5 +1,4 @@
 // src/github_issues.rs
-
 use serde::{Deserialize, Serialize};
 use std::env;
 use std::error::Error;
@@ -13,9 +12,7 @@ use log::{info, error};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Issue {
-    /// Fallback global id (base64–encoded) in case databaseId is missing.
     pub id: String,
-    /// Numeric issue id (as provided by GitHub’s REST API) if available.
     pub databaseId: Option<u64>,
     pub number: u32,
     pub title: String,
@@ -30,16 +27,13 @@ pub struct Issue {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Comment {
-    /// Fallback global id.
     pub id: String,
-    /// Numeric comment id if available.
     pub databaseId: Option<u64>,
     pub body: String,
     pub created_at: String,
     pub author: Option<AuthorNode>,
 }
 
-// GraphQL response types.
 #[derive(Debug, Deserialize)]
 struct GraphQLResponse<T> {
     data: Option<T>,
@@ -98,8 +92,6 @@ struct CommentNode {
     author: Option<AuthorNode>,
 }
 
-/// The author information. Note that we use an inline fragment on User (in the query) so that GitHub
-/// returns the numeric databaseId as well as name and email (if public).
 #[derive(Debug, Serialize, Deserialize)]
 struct AuthorNode {
     login: String,
@@ -119,7 +111,6 @@ struct PageInfo {
     endCursor: Option<String>,
 }
 
-// (Unused additional types for comment queries can remain here.)
 #[derive(Debug, Deserialize)]
 struct IssueData {
     issue: Option<CommentedIssue>,
@@ -130,7 +121,7 @@ struct CommentedIssue {
     comments: CommentConnection,
 }
 
-// CSV row type.
+// CSV row type
 #[derive(Debug, Serialize)]
 struct CsvRow {
     r#type: String,
@@ -151,25 +142,16 @@ struct CsvRow {
     reactions: String,
 }
 
-/// Fetch all issues (with comments) for a given repository via GitHub GraphQL API.
+/// Fetch issues (with comments) from GitHub GraphQL
 fn fetch_issues(owner: &str, repo: &str) -> Result<Vec<Issue>, Box<dyn Error>> {
-    // Get the GitHub token from the environment variable.
     let github_token = env::var("GITHUB_TOKEN")
         .map_err(|_| "GITHUB_TOKEN environment variable is not set.")?;
-
-    // Build headers.
     let mut headers = HeaderMap::new();
-    headers.insert(
-        AUTHORIZATION,
-        HeaderValue::from_str(&format!("Bearer {}", github_token))?,
-    );
+    headers.insert(AUTHORIZATION, HeaderValue::from_str(&format!("Bearer {}", github_token))?);
     headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
     headers.insert("User-Agent", HeaderValue::from_static("rust-github-client"));
-
     let client = Client::builder().default_headers(headers).build()?;
 
-    // GraphQL query with inline fragments requesting numeric ids (databaseId),
-    // name, and email for authors.
     let query = r#"
         query($owner: String!, $name: String!, $cursor: String) {
             repository(owner: $owner, name: $name) {
@@ -231,32 +213,27 @@ fn fetch_issues(owner: &str, repo: &str) -> Result<Vec<Issue>, Box<dyn Error>> {
             "name": repo,
             "cursor": cursor,
         });
-
         let body = json!({
             "query": query,
             "variables": variables,
         });
-
-        let response = client.post("https://api.github.com/graphql")
+        let response = client
+            .post("https://api.github.com/graphql")
             .json(&body)
             .send()?;
-
         if !response.status().is_success() {
             let status = response.status();
             let text = response.text()?;
             error!("GitHub API request failed with status {}: {}", status, text);
             return Err(format!("GitHub API request failed with status {}", status).into());
         }
-
         let resp_json: GraphQLResponse<RepositoryData> = response.json()?;
-
         if let Some(errors) = resp_json.errors {
             for err in errors {
                 error!("GraphQL error: {}", err.message);
             }
             return Err("GraphQL query failed.".into());
         }
-
         let data = resp_json.data.ok_or("No data received from GitHub API.")?;
         let repository = data.repository.ok_or("Repository not found or access denied.")?;
         let issues_conn = repository.issues.ok_or("Repository issues field is missing.")?;
@@ -290,18 +267,16 @@ fn fetch_issues(owner: &str, repo: &str) -> Result<Vec<Issue>, Box<dyn Error>> {
     Ok(all_issues)
 }
 
-/// Fetches issues (with comments) for the given owner/repo and writes them in CSV format.
+/// Writes issues + comments to CSV
 pub fn fetch_issues_with_comments_csv(owner: &str, repo: &str, output_csv_path: &str) -> Result<(), Box<dyn Error>> {
     let issues = fetch_issues(owner, repo)?;
     let count = issues.len();
 
     let path = Path::new(output_csv_path);
     let file = File::create(path)?;
-    let mut wtr = csv::WriterBuilder::new()
-        .has_headers(false)
-        .from_writer(file);
+    let mut wtr = csv::WriterBuilder::new().has_headers(false).from_writer(file);
 
-    // Write CSV header.
+    // Write CSV header
     wtr.write_record(&[
         "type",
         "issue_url",
@@ -321,13 +296,19 @@ pub fn fetch_issues_with_comments_csv(owner: &str, repo: &str, output_csv_path: 
         "reactions",
     ])?;
 
+    // For building final links:
     let base_issue_url = format!("https://api.github.com/repos/{}/{}/issues", owner, repo);
     let base_comment_url = format!("https://api.github.com/repos/{}/{}/issues/comments", owner, repo);
+
     let repo_name = repo.to_string();
 
     for issue in issues {
-        // Create a reactions JSON string as in your old CSV.
-        let issue_reactions = format!(r#"{{"url": "https://api.github.com/repos/{}/{}/issues/{}/reactions", "total_count": 0, "+1": 0, "-1": 0, "laugh": 0, "hooray": 0, "confused": 0, "heart": 0, "rocket": 0, "eyes": 0}}"#, owner, repo, issue.number);
+        // Build JSON-like reactions placeholder
+        let issue_reactions = format!(
+            r#"{{"url": "https://api.github.com/repos/{}/{}/issues/{}/reactions", "total_count": 0, "+1": 0, "-1": 0, "laugh": 0, "hooray": 0, "confused": 0, "heart": 0, "rocket": 0, "eyes": 0}}"#,
+            owner, repo, issue.number
+        );
+        // Use numeric databaseId if present:
         let issue_id = match issue.databaseId {
             Some(dbid) => dbid.to_string(),
             None => issue.id.clone(),
@@ -343,9 +324,11 @@ pub fn fetch_issues_with_comments_csv(owner: &str, repo: &str, output_csv_path: 
             (String::new(), String::new(), String::new(), String::new())
         };
 
+        // Write an "issue" row
         let issue_row = CsvRow {
             r#type: "issue".to_string(),
             issue_url: format!("{}/{}", base_issue_url, issue.number),
+            // For the issue row, we keep comment_url the same as issue_url (as in your original code).
             comment_url: format!("{}/{}", base_issue_url, issue.number),
             repo_name: repo_name.clone(),
             id: issue_id,
@@ -363,8 +346,18 @@ pub fn fetch_issues_with_comments_csv(owner: &str, repo: &str, output_csv_path: 
         };
         wtr.serialize(issue_row)?;
 
+        // Now for each comment on this issue
         for comment_node in issue.comments.nodes {
-            let comment_reactions = format!(r#"{{"url": "https://api.github.com/repos/{}/{}/issues/comments/{}/reactions", "total_count": 0, "+1": 0, "-1": 0, "laugh": 0, "hooray": 0, "confused": 0, "heart": 0, "rocket": 0, "eyes": 0}}"#, owner, repo, comment_node.id);
+            // Build comment reactions placeholder
+            // Use numeric databaseId if present for the final link:
+            let comment_url_id = match comment_node.databaseId {
+                Some(dbid) => dbid.to_string(),
+                None => comment_node.id.clone(),
+            };
+            let comment_reactions = format!(
+                r#"{{"url": "https://api.github.com/repos/{}/{}/issues/comments/{}/reactions", "total_count": 0, "+1": 0, "-1": 0, "laugh": 0, "hooray": 0, "confused": 0, "heart": 0, "rocket": 0, "eyes": 0}}"#,
+                owner, repo, comment_url_id
+            );
             let comment_id = match comment_node.databaseId {
                 Some(dbid) => dbid.to_string(),
                 None => comment_node.id.clone(),
@@ -379,14 +372,16 @@ pub fn fetch_issues_with_comments_csv(owner: &str, repo: &str, output_csv_path: 
             } else {
                 (String::new(), String::new(), String::new(), String::new())
             };
+
+            // Write a "comment" row
             let comment_row = CsvRow {
                 r#type: "comment".to_string(),
                 issue_url: format!("{}/{}", base_issue_url, issue.number),
-                comment_url: format!("{}/{}", base_comment_url, comment_node.id),
+                comment_url: format!("{}/{}", base_comment_url, comment_id),
                 repo_name: repo_name.clone(),
                 id: comment_id,
                 issue_num: issue.number,
-                title: "NA".to_string(),
+                title: "NA".to_string(), // no separate title for a comment
                 user_login: c_user_login,
                 user_id: c_user_id,
                 user_name: c_user_name,
@@ -406,17 +401,11 @@ pub fn fetch_issues_with_comments_csv(owner: &str, repo: &str, output_csv_path: 
     Ok(())
 }
 
-/// NEW FUNCTION: Write grouped issue statistics by developer (for issues and comments)
-/// into separate CSV files based on the developer’s name. The CSV format is:
-/// date_time,file,committer_name,committer_email,comment_url/issue_url,month
-///
-/// For example, a developer named "Sean McCarthy" will have a CSV file called "Sean McCarthy.csv".
+/// If you want grouped-by-developer logic (issues + comments)
 pub fn write_issue_stats_grouped_by_developer(owner: &str, repo: &str, output_folder: &str) -> Result<(), Box<dyn Error>> {
     use std::collections::HashMap;
     use chrono::DateTime;
-    
 
-    // Local struct representing one row of issue statistics.
     #[derive(Debug, Serialize)]
     struct IssueDevStat {
         date_time: String,
@@ -427,11 +416,9 @@ pub fn write_issue_stats_grouped_by_developer(owner: &str, repo: &str, output_fo
         month: String,
     }
 
-    // Fetch issues.
     let issues = fetch_issues(owner, repo)?;
     let mut grouped_stats: HashMap<String, Vec<IssueDevStat>> = HashMap::new();
 
-    // Helper closure to extract the month (as two-digit number) from a RFC3339 date string.
     let extract_month = |dt_str: &str| -> String {
         if let Ok(dt) = DateTime::parse_from_rfc3339(dt_str) {
             dt.format("%m").to_string()
@@ -440,9 +427,8 @@ pub fn write_issue_stats_grouped_by_developer(owner: &str, repo: &str, output_fo
         }
     };
 
-    // Process each issue.
     for issue in issues.iter() {
-        // For the issue itself.
+        // Issue's author
         if let Some(author) = &issue.author {
             let name = author.name.clone().unwrap_or(author.login.clone());
             let email = author.email.clone().unwrap_or_default();
@@ -458,14 +444,17 @@ pub fn write_issue_stats_grouped_by_developer(owner: &str, repo: &str, output_fo
             };
             grouped_stats.entry(name).or_default().push(stat);
         }
-        // For each comment on the issue.
+        // Comments
         for comment in issue.comments.nodes.iter() {
             if let Some(author) = &comment.author {
                 let name = author.name.clone().unwrap_or(author.login.clone());
                 let email = author.email.clone().unwrap_or_default();
                 let month = extract_month(&comment.createdAt);
-                // Use the issue title as the "file" (as a placeholder).
-                let url = format!("https://github.com/{}/{}/issues/comments/{}", owner, repo, comment.id);
+                let url_id = match comment.databaseId {
+                    Some(dbid) => dbid.to_string(),
+                    None => comment.id.clone(),
+                };
+                let url = format!("https://github.com/{}/{}/issues/comments/{}", owner, repo, url_id);
                 let stat = IssueDevStat {
                     date_time: comment.createdAt.clone(),
                     file: issue.title.clone(),
@@ -479,17 +468,14 @@ pub fn write_issue_stats_grouped_by_developer(owner: &str, repo: &str, output_fo
         }
     }
 
-    // Ensure the output folder exists.
     std::fs::create_dir_all(output_folder)?;
 
-    // For each developer group, write a separate CSV file named after the developer.
     for (dev_name, stats) in grouped_stats {
         let file_path = format!("{}/{}.csv", output_folder, dev_name);
         let file = File::create(&file_path)?;
         let mut writer = csv::Writer::from_writer(file);
-        // Write header.
         writer.write_record(&["date_time", "file", "committer_name", "committer_email", "comment_url/issue_url", "month"])?;
-        // Write each record.
+
         for stat in stats {
             writer.write_record(&[
                 stat.date_time,
